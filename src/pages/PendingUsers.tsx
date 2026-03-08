@@ -5,13 +5,24 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { UserCheck, Clock } from "lucide-react";
+import { UserCheck, Clock, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
 export default function PendingUsers() {
-  const { pendingUsers, isLoading, approveUser } = usePendingUsers();
+  const { pendingUsers, isLoading, approveUser, rejectUser } = usePendingUsers();
   const [selectedRoles, setSelectedRoles] = useState<Record<string, AppRole>>({});
   const { toast } = useToast();
 
@@ -26,6 +37,15 @@ export default function PendingUsers() {
       toast({ title: "ইউজার এপ্রুভ হয়েছে ✅" });
     } catch {
       toast({ title: "এপ্রুভ করতে সমস্যা হয়েছে", variant: "destructive" });
+    }
+  };
+
+  const handleReject = async (userId: string, name: string) => {
+    try {
+      await rejectUser.mutateAsync(userId);
+      toast({ title: `${name || "ইউজার"} রিজেক্ট করা হয়েছে 🗑️` });
+    } catch {
+      toast({ title: "রিজেক্ট করতে সমস্যা হয়েছে", variant: "destructive" });
     }
   };
 
@@ -84,6 +104,30 @@ export default function PendingUsers() {
                 >
                   Approve
                 </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="destructive" className="px-2">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>ইউজার রিজেক্ট করবেন?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        <strong>{user.full_name || user.email}</strong> এর প্রোফাইল ডিলিট হয়ে যাবে। এই কাজটি ফেরানো যাবে না।
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>বাতিল</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleReject(user.id, user.full_name || "")}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        রিজেক্ট করুন
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </CardContent>
             </Card>
           ))}

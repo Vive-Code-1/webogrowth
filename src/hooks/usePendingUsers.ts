@@ -39,5 +39,18 @@ export function usePendingUsers() {
     },
   });
 
-  return { pendingUsers, isLoading, approveUser };
+  const rejectUser = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pending-users"] });
+    },
+  });
+
+  return { pendingUsers, isLoading, approveUser, rejectUser };
 }
