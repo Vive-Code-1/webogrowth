@@ -40,9 +40,13 @@ export function InviteUserDialog({ open, onOpenChange, defaultRole = "team" }: I
     setLoading(false);
 
     if (error || data?.error) {
+      const errMsg = data?.error || error?.message || "Unknown error";
+      const isRateLimit = errMsg.toLowerCase().includes("rate limit");
       toast({
-        title: "Invite failed",
-        description: data?.error || error?.message || "Unknown error",
+        title: isRateLimit ? "ইমেইল লিমিট শেষ" : "Invite failed",
+        description: isRateLimit
+          ? "Supabase ফ্রি টিয়ারে ঘণ্টায় সীমিত সংখ্যক ইমেইল পাঠানো যায়। কিছুক্ষণ পর আবার চেষ্টা করুন।"
+          : errMsg,
         variant: "destructive",
       });
       return;
