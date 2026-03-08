@@ -72,15 +72,13 @@ export default function Dashboard() {
       if (isWithinInterval(date, yearInterval)) year += budget;
     });
 
-    // Monthly chart - last 6 months
-    const sixMonthsAgo = subMonths(now, 5);
-    const months = eachMonthOfInterval({ start: startOfMonth(sixMonthsAgo), end: startOfMonth(now) });
-    const monthlyChart = months.map((m) => {
-      const mInterval = { start: startOfMonth(m), end: endOfMonth(m) };
+    // This month chart - each day of current month
+    const monthDays = eachDayOfInterval(monthInterval);
+    const thisMonthChart = monthDays.map((d) => {
       const total = projects
-        .filter((p) => isWithinInterval(parseISO(p.created_at), mInterval))
+        .filter((p) => isSameDay(parseISO(p.created_at), d))
         .reduce((sum, p) => sum + (p.budget || 0), 0);
-      return { name: format(m, "MMM"), revenue: total };
+      return { name: format(d, "d"), revenue: total };
     });
 
     // Weekly chart - days of current week
