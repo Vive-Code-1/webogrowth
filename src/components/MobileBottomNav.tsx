@@ -1,4 +1,4 @@
-import { LayoutDashboard, FolderKanban, CheckSquare, User, Building2 } from "lucide-react";
+import { LayoutDashboard, FolderKanban, CheckSquare, User, Building2, Users } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ const navByRole = {
     { title: "Home", url: "/", icon: LayoutDashboard },
     { title: "Projects", url: "/projects", icon: FolderKanban },
     { title: "Tasks", url: "/tasks", icon: CheckSquare },
+    { title: "Team", url: "/team", icon: Users },
     { title: "Clients", url: "/clients", icon: Building2 },
     { title: "Profile", url: "/profile", icon: User },
   ],
