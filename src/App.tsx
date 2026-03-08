@@ -16,6 +16,9 @@ import ClientPortal from "@/pages/ClientPortal";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
 import PendingUsers from "@/pages/PendingUsers";
+import Profile from "@/pages/Profile";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +33,8 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route element={<AppLayout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/projects" element={<Projects />} />
@@ -40,6 +45,7 @@ const App = () => (
               <Route path="/my-tasks" element={<MyTasks />} />
               <Route path="/portal" element={<ClientPortal />} />
               <Route path="/pending-users" element={<PendingUsers />} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

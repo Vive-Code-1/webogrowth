@@ -71,6 +71,11 @@ export default function Login() {
           <Button type="submit" className="w-full font-body" disabled={loading}>
             {loading ? "Signing in…" : "Sign in"}
           </Button>
+          <div className="text-right">
+            <Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-primary font-body">
+              Forgot password?
+            </Link>
+          </div>
         </form>
 
         <p className="text-center text-sm text-muted-foreground font-body">
