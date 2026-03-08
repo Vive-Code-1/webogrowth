@@ -1,126 +1,88 @@
 
+# মোবাইল UI + প্রোফাইল + পাসওয়ার্ড রিসেট প্ল্যান
 
-# Full-Stack Agency PM System with RBAC
-
-This is a large undertaking that transforms the current mock-data frontend into a full-stack application with authentication, role-based access, and distinct portals. I recommend breaking this into phases. Here is the complete plan for **Phase 1** (foundation) and an outline for subsequent phases.
-
----
-
-## Phase 1: Backend Foundation & Authentication
-
-### 1. Connect Lovable Cloud (Supabase)
-Set up the backend with the following database schema:
-
-```text
-┌──────────────┐    ┌───────────────┐    ┌──────────────┐
-│  auth.users   │───▶│   profiles     │───▶│  user_roles   │
-│  (built-in)   │    │  name, avatar  │    │  user_id, role│
-└──────────────┘    └───────────────┘    │  (admin/team/ │
-                                          │   client)     │
-                                          └───────────────┘
-
-┌──────────────┐    ┌───────────────┐    ┌──────────────┐
-│   projects    │───▶│ project_members│◀──│   profiles    │
-│  name, desc,  │    │  project_id,   │    └──────────────┘
-│  deadline,    │    │  user_id, role │
-│  status,      │    └───────────────┘
-│  client_id    │
-└──────┬───────┘
-       │
-       ▼
-┌──────────────┐    ┌───────────────┐
-│    tasks      │───▶│  comments      │
-│  title, desc, │    │  task_id,      │
-│  status, pri, │    │  user_id,      │
-│  assignee_id, │    │  content,      │
-│  project_id,  │    │  created_at    │
-│  due_date,    │    └───────────────┘
-│  visible_to_  │
-│  client,      │
-│  stage        │
-└──────────────┘
-```
-
-**Task stages enum:** `backlog`, `todo`, `in_progress`, `internal_review`, `client_review`, `completed`
-
-**User roles enum:** `admin`, `team`, `client`
-
-### 2. Authentication Pages
-- **Login page** (`/login`) — email/password
-- **Signup page** (`/signup`) — with role selection (admin creates accounts, but initial setup needs a first admin)
-- Auto-create profile on signup via DB trigger
-- Role stored in `user_roles` table (security definer function for RLS checks)
-
-### 3. Role-Based Routing & Layout
-- **Auth guard** component wrapping protected routes
-- After login, redirect based on role:
-  - `admin` → `/` (Global Dashboard)
-  - `team` → `/my-tasks`
-  - `client` → `/portal`
-- Sidebar dynamically shows only role-appropriate nav items
-
-### 4. RLS Policies
-- **Projects:** Admins see all. Team members see only projects they're assigned to. Clients see only projects where they're the client.
-- **Tasks:** Same project-scoped access. Clients only see tasks where `visible_to_client = true`.
-- **Comments:** Scoped to task access.
+## সামারি
+এই প্ল্যানে ৪টি মূল ফিচার থাকবে:
+1. মোবাইলে bottom navigation bar (সাইডবারের বদলে)
+2. ড্যাশবোর্ডে মোবাইল কারেন্সি টগল
+3. প্রোফাইল পেজ (ইমেজ আপলোড সহ)
+4. পাসওয়ার্ড ফরগট/রিসেট ফ্লো
 
 ---
 
-## Phase 2: Admin Features
+## 1. Mobile Bottom Navigation
 
-### A. Global Dashboard (existing, connect to real data)
-- Stats from DB queries (active projects, tasks due, team workload)
-- Quick action buttons: "New Project", "Invite Client", "Add Team Member"
+### নতুন কম্পোনেন্ট: `src/components/MobileBottomNav.tsx`
+- রেফারেন্স ইমেজের মতো pill-shaped bottom bar
+- শুধু মোবাইলে (`< 768px`) দেখাবে
+- Role-based nav items (admin/team/client অনুযায়ী)
+- Active state highlight (primary color circle)
+- Icons: Home, Projects, Tasks, Profile
 
-### B. Project Management
-- **Create Project form** (dialog): name, description, start date, deadline
-- **Client assignment** dropdown (from users with `client` role)
-- **Team assignment** multi-select (from users with `team` role)
-
-### C. Team & Client Management
-- Invite users by email (Supabase auth invite)
-- Assign roles on invite
-
----
-
-## Phase 3: Task Engine
-
-### A. Enhanced Kanban Board
-- 6 columns: Backlog → To Do → In Progress → Internal Review → Client Review → Completed
-- Drag & drop between columns
-- Task cards show assignee, priority, due date, client visibility icon
-
-### B. Task Modal/Sheet
-- Full task details: title, description, assignee, due date, priority
-- **Visibility toggle**: "Visible to Client" switch
-- **Comments section**: threaded chat-like UI
-- Subtask support
-
-### C. List View
-- Table with sorting/filtering by status, assignee, priority, project
+### `src/components/AppLayout.tsx` পরিবর্তন
+- মোবাইলে `AppSidebar` হাইড করবো
+- মোবাইলে `MobileBottomNav` দেখাবো
+- main content এ `pb-20` padding দেবো মোবাইলে
 
 ---
 
-## Phase 4: Client Portal
+## 2. Dashboard Mobile Currency Toggle
 
-### A. Client Dashboard (`/portal`)
-- Welcome message, list of their active projects
-- Simplified progress view (timeline/progress bar)
-
-### B. Client Project View
-- Only sees tasks marked `visible_to_client`
-- Can leave comments on tasks in `client_review` stage
-- Approve/request revision buttons
+### `src/pages/Dashboard.tsx`
+- `hidden sm:flex` থেকে কারেন্সি টগল আলাদা করবো
+- মোবাইলে header এর নিচে একটি row তে currency toggle দেখাবো
+- Exchange rate indicator সহ
 
 ---
 
-## Implementation Approach
+## 3. Profile Page + Avatar Upload
 
-Given the scope, I recommend implementing in order:
-1. **Phase 1** first — sets the foundation everything else depends on
-2. **Phase 2** next — admin can manage data
-3. **Phase 3** — task engine with real CRUD
-4. **Phase 4** — client portal
+### Database: Storage bucket
+- `avatars` নামে public bucket তৈরি করতে হবে
 
-Each phase is a separate conversation/set of prompts. Shall I begin with Phase 1 (Lovable Cloud setup, auth, RBAC, and role-based routing)?
+### নতুন পেজ: `src/pages/Profile.tsx`
+- Full name, email দেখাবে
+- Avatar আপলোড (Supabase storage)
+- Profile update functionality
 
+### Route যোগ
+- `/profile` route App.tsx এ
+
+---
+
+## 4. Forgot Password / Reset Password
+
+### `src/pages/Login.tsx` এ
+- "Forgot password?" লিংক যোগ করবো
+
+### নতুন পেজ: `src/pages/ForgotPassword.tsx`
+- Email input
+- `resetPasswordForEmail` কল করবে
+
+### নতুন পেজ: `src/pages/ResetPassword.tsx`
+- Recovery token detect করবে
+- New password set form
+- `updateUser({ password })` কল
+
+### Routes যোগ
+- `/forgot-password`
+- `/reset-password`
+
+---
+
+## Technical Details
+
+### Files to Create:
+1. `src/components/MobileBottomNav.tsx` — Bottom nav bar component
+2. `src/pages/Profile.tsx` — Profile page with avatar upload
+3. `src/pages/ForgotPassword.tsx` — Email input for password reset
+4. `src/pages/ResetPassword.tsx` — Set new password page
+
+### Files to Modify:
+1. `src/components/AppLayout.tsx` — Mobile responsive layout, hide sidebar
+2. `src/pages/Dashboard.tsx` — Mobile currency toggle visibility
+3. `src/pages/Login.tsx` — Forgot password link
+4. `src/App.tsx` — New routes
+
+### Database Migration:
+- Avatars storage bucket creation with RLS policies
