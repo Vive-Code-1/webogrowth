@@ -21,8 +21,7 @@ import { useMemo } from "react";
 import {
   startOfWeek, endOfWeek, startOfMonth, endOfMonth,
   startOfYear, endOfYear, isWithinInterval, parseISO,
-  format, subMonths, eachMonthOfInterval, eachDayOfInterval,
-  startOfDay, isSameDay
+  format, eachDayOfInterval, isSameDay
 } from "date-fns";
 
 const STAGE_COLORS = [
@@ -73,15 +72,13 @@ export default function Dashboard() {
       if (isWithinInterval(date, yearInterval)) year += budget;
     });
 
-    // Monthly chart - last 6 months
-    const sixMonthsAgo = subMonths(now, 5);
-    const months = eachMonthOfInterval({ start: startOfMonth(sixMonthsAgo), end: startOfMonth(now) });
-    const monthlyChart = months.map((m) => {
-      const mInterval = { start: startOfMonth(m), end: endOfMonth(m) };
+    // This month chart - each day of current month
+    const monthDays = eachDayOfInterval(monthInterval);
+    const thisMonthChart = monthDays.map((d) => {
       const total = projects
-        .filter((p) => isWithinInterval(parseISO(p.created_at), mInterval))
+        .filter((p) => isSameDay(parseISO(p.created_at), d))
         .reduce((sum, p) => sum + (p.budget || 0), 0);
-      return { name: format(m, "MMM"), revenue: total };
+      return { name: format(d, "d"), revenue: total };
     });
 
     // Weekly chart - days of current week
@@ -93,7 +90,7 @@ export default function Dashboard() {
       return { name: format(d, "EEE"), revenue: total };
     });
 
-    return { week, month, year, monthlyChart, weeklyChart };
+    return { week, month, year, thisMonthChart, weeklyChart };
   }, [projects]);
 
   // Task stage distribution
@@ -215,11 +212,11 @@ export default function Dashboard() {
           <Tabs defaultValue="monthly" className="mt-3">
             <TabsList className="h-8">
               <TabsTrigger value="weekly" className="text-xs px-3 h-7">This Week</TabsTrigger>
-              <TabsTrigger value="monthly" className="text-xs px-3 h-7">6 Months</TabsTrigger>
+              <TabsTrigger value="monthly" className="text-xs px-3 h-7">This Month</TabsTrigger>
             </TabsList>
             <TabsContent value="monthly" className="mt-4">
               <ChartContainer config={chartConfig} className="h-[220px] w-full">
-                <AreaChart data={revenueData.monthlyChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                <AreaChart data={revenueData.thisMonthChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
