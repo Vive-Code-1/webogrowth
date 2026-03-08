@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Camera, Loader2, Save } from "lucide-react";
+import { Camera, Loader2, Save, Lock, Eye, EyeOff } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function Profile() {
@@ -17,6 +17,13 @@ export default function Profile() {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [fullName, setFullName] = useState("");
+
+  // Password change state
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile", user?.id],
@@ -93,6 +100,29 @@ export default function Profile() {
     }
   };
 
+  const handlePasswordChange = async () => {
+    if (newPassword.length < 6) {
+      toast({ title: "Password too short", description: "Minimum 6 characters required", variant: "destructive" });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ title: "Passwords don't match", description: "Please confirm your new password", variant: "destructive" });
+      return;
+    }
+
+    setChangingPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setChangingPassword(false);
+
+    if (error) {
+      toast({ title: "Password change failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Password changed successfully! 🔒" });
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -102,7 +132,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="max-w-lg mx-auto space-y-8">
+    <div className="max-w-lg mx-auto space-y-8 px-4">
       <div>
         <h1 className="font-heading text-2xl font-bold text-foreground">Profile</h1>
         <p className="text-sm text-muted-foreground font-body mt-1">Manage your account settings</p>
@@ -143,8 +173,9 @@ export default function Profile() {
         )}
       </div>
 
-      {/* Form */}
-      <div className="space-y-4">
+      {/* Profile Form */}
+      <div className="rounded-xl border bg-card p-5 space-y-4">
+        <h2 className="font-heading text-base font-semibold text-foreground">Personal Info</h2>
         <div className="space-y-2">
           <Label className="font-body text-sm">Full Name</Label>
           <Input
@@ -165,6 +196,64 @@ export default function Profile() {
         <Button onClick={handleSave} disabled={saving} className="w-full font-body">
           {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
           Save Changes
+        </Button>
+      </div>
+
+      {/* Password Change */}
+      <div className="rounded-xl border bg-card p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <Lock className="h-4 w-4 text-muted-foreground" />
+          <h2 className="font-heading text-base font-semibold text-foreground">Change Password</h2>
+        </div>
+        <div className="space-y-2">
+          <Label className="font-body text-sm">New Password</Label>
+          <div className="relative">
+            <Input
+              type={showNewPassword ? "text" : "password"}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Minimum 6 characters"
+              className="font-body pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowNewPassword(!showNewPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label className="font-body text-sm">Confirm Password</Label>
+          <div className="relative">
+            <Input
+              type={showConfirmPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Re-enter new password"
+              className="font-body pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {confirmPassword && newPassword !== confirmPassword && (
+            <p className="text-xs text-destructive font-body">Passwords don't match</p>
+          )}
+        </div>
+        <Button
+          onClick={handlePasswordChange}
+          disabled={changingPassword || !newPassword || !confirmPassword}
+          variant="outline"
+          className="w-full font-body"
+        >
+          {changingPassword ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Lock className="h-4 w-4 mr-2" />}
+          Update Password
         </Button>
       </div>
     </div>

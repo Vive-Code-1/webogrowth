@@ -163,12 +163,12 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground font-body mt-1">Welcome back! Here's your project overview.</p>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {currency === "BDT" && (
             <span className="text-[11px] text-muted-foreground font-body">1 USD = ৳{BDT_RATE.toFixed(1)}</span>
           )}

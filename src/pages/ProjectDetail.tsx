@@ -172,7 +172,7 @@ export default function ProjectDetail() {
         </div>
 
         {/* Kanban Board */}
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-4 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
           <KanbanBoard tasks={tasks || []} onTaskClick={handleTaskClick} onNewTask={handleNewTask} />
         </div>
       </div>

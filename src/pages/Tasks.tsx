@@ -43,9 +43,9 @@ export default function Tasks() {
         <p className="text-sm text-muted-foreground font-body mt-1">{filtered.length} tasks</p>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <Select value={filterStage} onValueChange={setFilterStage}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-36 sm:w-40">
             <SelectValue placeholder="All Stages" />
           </SelectTrigger>
           <SelectContent>
@@ -56,7 +56,7 @@ export default function Tasks() {
           </SelectContent>
         </Select>
         <Select value={filterPriority} onValueChange={setFilterPriority}>
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-32 sm:w-32">
             <SelectValue placeholder="All Priorities" />
           </SelectTrigger>
           <SelectContent>
@@ -68,14 +68,15 @@ export default function Tasks() {
         </Select>
       </div>
 
-      <div className="rounded-lg border bg-card overflow-hidden">
+      {/* Desktop table */}
+      <div className="rounded-lg border bg-card overflow-hidden hidden md:block">
         <table className="w-full">
           <thead>
             <tr className="border-b bg-secondary/30">
               <th className="text-left text-xs font-heading font-semibold text-foreground p-3">Title</th>
-              <th className="text-left text-xs font-heading font-semibold text-foreground p-3 hidden md:table-cell">Project</th>
+              <th className="text-left text-xs font-heading font-semibold text-foreground p-3">Project</th>
               <th className="text-left text-xs font-heading font-semibold text-foreground p-3">Stage</th>
-              <th className="text-left text-xs font-heading font-semibold text-foreground p-3 hidden sm:table-cell">Priority</th>
+              <th className="text-left text-xs font-heading font-semibold text-foreground p-3">Priority</th>
               <th className="text-left text-xs font-heading font-semibold text-foreground p-3 hidden lg:table-cell">Assignee</th>
               <th className="text-left text-xs font-heading font-semibold text-foreground p-3 hidden lg:table-cell">Due</th>
             </tr>
@@ -96,11 +97,11 @@ export default function Tasks() {
                     {task.visible_to_client && <Eye className="h-3 w-3 text-primary shrink-0" />}
                   </div>
                 </td>
-                <td className="p-3 hidden md:table-cell">
+                <td className="p-3">
                   <span className="text-xs text-muted-foreground font-body">{task.project_name}</span>
                 </td>
                 <td className="p-3"><TaskStageBadge stage={task.stage} /></td>
-                <td className="p-3 hidden sm:table-cell"><PriorityBadge priority={task.priority} /></td>
+                <td className="p-3"><PriorityBadge priority={task.priority} /></td>
                 <td className="p-3 hidden lg:table-cell">
                   {task.assignee ? (
                     <div className="flex items-center gap-2">
@@ -122,6 +123,33 @@ export default function Tasks() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile card view */}
+      <div className="space-y-3 md:hidden">
+        {filtered.length === 0 && (
+          <p className="text-sm text-muted-foreground font-body text-center py-12">No tasks found</p>
+        )}
+        {filtered.map((task) => (
+          <div
+            key={task.id}
+            className="rounded-lg border bg-card p-4 cursor-pointer hover:bg-secondary/30 transition-colors"
+            onClick={() => { setSelectedTask(task); setModalOpen(true); }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-sm font-body font-medium text-foreground truncate">{task.title}</span>
+                {task.visible_to_client && <Eye className="h-3 w-3 text-primary shrink-0" />}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground font-body mb-2">{task.project_name}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <TaskStageBadge stage={task.stage} />
+              <PriorityBadge priority={task.priority} />
+              {task.due_date && <span className="text-xs text-muted-foreground font-body ml-auto">{task.due_date}</span>}
+            </div>
+          </div>
+        ))}
       </div>
 
       {selectedTask && (

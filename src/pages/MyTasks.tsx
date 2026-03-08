@@ -31,12 +31,12 @@ export default function MyTasks() {
             className="rounded-lg border bg-card p-4 card-hover cursor-pointer animate-fade-in"
             onClick={() => { setSelectedTask(task); setModalOpen(true); }}
           >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="font-body font-medium text-foreground text-sm">{task.title}</span>
-                {task.visible_to_client && <Eye className="h-3 w-3 text-primary" />}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-1">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="font-body font-medium text-foreground text-sm truncate">{task.title}</span>
+                {task.visible_to_client && <Eye className="h-3 w-3 text-primary shrink-0" />}
               </div>
-              <span className="text-xs text-muted-foreground font-body">{task.project_name}</span>
+              <span className="text-xs text-muted-foreground font-body shrink-0">{task.project_name}</span>
             </div>
             {task.description && (
               <p className="text-xs text-muted-foreground font-body mb-2 line-clamp-1">{task.description}</p>
