@@ -15,6 +15,7 @@ import MyTasks from "@/pages/MyTasks";
 import ClientPortal from "@/pages/ClientPortal";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
+import PendingUsers from "@/pages/PendingUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/clients" element={<Clients />} />
               <Route path="/my-tasks" element={<MyTasks />} />
               <Route path="/portal" element={<ClientPortal />} />
+              <Route path="/pending-users" element={<PendingUsers />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

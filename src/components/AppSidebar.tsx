@@ -1,4 +1,4 @@
-import { LayoutDashboard, FolderKanban, Users, CheckSquare, Building2, LogOut } from "lucide-react";
+import { LayoutDashboard, FolderKanban, Users, CheckSquare, Building2, LogOut, UserPlus } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,6 +21,7 @@ const allNavItems = [
   { title: "My Tasks", url: "/my-tasks", icon: CheckSquare, roles: ["team"] },
   { title: "Team", url: "/team", icon: Users, roles: ["admin"] },
   { title: "Clients", url: "/clients", icon: Building2, roles: ["admin"] },
+  { title: "Pending Users", url: "/pending-users", icon: UserPlus, roles: ["admin"] },
   { title: "Portal", url: "/portal", icon: FolderKanban, roles: ["client"] },
 ];
 
