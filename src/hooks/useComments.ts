@@ -7,6 +7,7 @@ export interface CommentWithUser {
   created_at: string;
   user_id: string;
   task_id: string;
+  attachment_url: string | null;
   user: { full_name: string | null; email: string | null; avatar_url: string | null } | null;
 }
 
@@ -44,14 +45,31 @@ export function useComments(taskId: string | undefined) {
 export function useAddComment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ task_id, content }: { task_id: string; content: string }) => {
+    mutationFn: async ({ task_id, content, file }: { task_id: string; content: string; file?: File }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
+
+      let attachment_url: string | null = null;
+
+      if (file) {
+        const ext = file.name.split(".").pop();
+        const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("comment-attachments")
+          .upload(path, file);
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from("comment-attachments")
+          .getPublicUrl(path);
+        attachment_url = urlData.publicUrl;
+      }
 
       const { error } = await supabase.from("comments").insert({
         task_id,
         content,
         user_id: user.id,
+        attachment_url,
       });
 
       if (error) throw error;
