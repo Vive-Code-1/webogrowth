@@ -21,8 +21,7 @@ import { useMemo } from "react";
 import {
   startOfWeek, endOfWeek, startOfMonth, endOfMonth,
   startOfYear, endOfYear, isWithinInterval, parseISO,
-  format, subMonths, eachMonthOfInterval, eachDayOfInterval,
-  startOfDay, isSameDay
+  format, eachDayOfInterval, isSameDay
 } from "date-fns";
 
 const STAGE_COLORS = [
