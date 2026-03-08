@@ -37,7 +37,7 @@ export default function Signup() {
 
     // Assign role
     if (data.user) {
-      await supabase.from("user_roles").insert({ user_id: data.user.id, role });
+      await supabase.from("user_roles").insert({ user_id: data.user.id, role } as any);
     }
 
     setLoading(false);
