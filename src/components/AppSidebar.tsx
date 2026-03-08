@@ -3,6 +3,7 @@ import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { usePendingUsers } from "@/hooks/usePendingUsers";
+import { useAppSettings } from "@/hooks/useAppSettings";
 import { Badge } from "@/components/ui/badge";
 import {
   Sidebar,
