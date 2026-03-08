@@ -49,6 +49,7 @@ const clientStageLabel: Record<string, string> = {
 
 export default function ClientPortal() {
   const { user } = useAuth();
+  const [openTaskId, setOpenTaskId] = useState<string | null>(null);
   const { data: projects, isLoading: loadingProjects } = useProjects();
   const { data: tasks, isLoading: loadingTasks } = useAllTasks();
 
