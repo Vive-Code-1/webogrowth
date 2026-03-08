@@ -215,9 +215,24 @@ export default function Dashboard() {
         {/* Revenue Chart */}
         <div className="lg:col-span-2 rounded-xl border bg-card p-5 animate-fade-in">
           <div className="flex items-center justify-between mb-1">
-            <div>
+          <div>
               <h2 className="font-heading text-lg font-semibold text-foreground">Revenue Overview</h2>
               <p className="text-xs text-muted-foreground font-body mt-0.5">Budget from projects by time period</p>
+            </div>
+            <div className="flex items-center gap-2 bg-secondary/60 rounded-full p-0.5">
+              {(["USD", "BDT"] as const).map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setCurrency(c)}
+                  className={`px-3 py-1 text-xs font-body font-medium rounded-full transition-all ${
+                    currency === c
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {c === "USD" ? "$ USD" : "৳ BDT"}
+                </button>
+              ))}
             </div>
           </div>
           <Tabs defaultValue="monthly" className="mt-3">
