@@ -212,7 +212,7 @@ export default function Dashboard() {
           <Tabs defaultValue="monthly" className="mt-3">
             <TabsList className="h-8">
               <TabsTrigger value="weekly" className="text-xs px-3 h-7">This Week</TabsTrigger>
-              <TabsTrigger value="monthly" className="text-xs px-3 h-7">6 Months</TabsTrigger>
+              <TabsTrigger value="monthly" className="text-xs px-3 h-7">This Month</TabsTrigger>
             </TabsList>
             <TabsContent value="monthly" className="mt-4">
               <ChartContainer config={chartConfig} className="h-[220px] w-full">
