@@ -129,10 +129,19 @@ export default function Dashboard() {
     return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
+  const convertAmount = (val: number) => currency === "BDT" ? val * BDT_RATE : val;
+  const currencySymbol = currency === "BDT" ? "৳" : "$";
+
   const formatCurrency = (val: number) => {
-    if (val >= 1000) return `$${(val / 1000).toFixed(1)}k`;
-    return `$${val}`;
+    const converted = convertAmount(val);
+    if (converted >= 1000) return `${currencySymbol}${(converted / 1000).toFixed(1)}k`;
+    return `${currencySymbol}${Math.round(converted)}`;
   };
+
+  const chartData = useMemo(() => ({
+    thisMonthChart: revenueData.thisMonthChart?.map(d => ({ ...d, revenue: convertAmount(d.revenue) })) || [],
+    weeklyChart: revenueData.weeklyChart?.map(d => ({ ...d, revenue: convertAmount(d.revenue) })) || [],
+  }), [revenueData, currency]);
 
   if (loadingProjects || loadingTasks) {
     return (
