@@ -1,44 +1,126 @@
 
 
-# ডাটাবেস ক্লিনআপ ও ফ্রেশ টেস্টিং সেটআপ
+# Full-Stack Agency PM System with RBAC
 
-## বর্তমান অবস্থা
-ডাটাবেসে তিনজন ইউজার আছে, সবার role assigned:
-- `aabeg01@gmail.com` → admin (রাখবো)
-- `rafikuzzaman10@gmail.com` → client (রিমুভ করবো)
-- `rafiquzzamanrafi85@gmail.com` → team (রিমুভ করবো)
+This is a large undertaking that transforms the current mock-data frontend into a full-stack application with authentication, role-based access, and distinct portals. I recommend breaking this into phases. Here is the complete plan for **Phase 1** (foundation) and an outline for subsequent phases.
 
-## সমস্যা
-1. **Rafikuzzaman10@gmail.com** — ইতিমধ্যে client role আছে, তাই pending এ দেখায় না
-2. **Rafiquzzamanrafi85@gmail.com** — Auth logs দেখাচ্ছে "Invalid login credentials" — সম্ভবত পাসওয়ার্ড ভুল দেওয়া হচ্ছে অথবা email confirm হয়নি
-3. **Trigger মিসিং** — `handle_new_user()` ফাংশন আছে কিন্তু trigger নেই, তাই নতুন সাইনআপে profiles row তৈরি হয় না
+---
 
-## পরিবর্তন
+## Phase 1: Backend Foundation & Authentication
 
-### 1. Data Cleanup (insert tool দিয়ে)
-Admin ছাড়া বাকি দুজনের `user_roles` এবং `profiles` থেকে ডাটা ডিলিট:
-```sql
-DELETE FROM user_roles WHERE user_id != '4c8ccfae-a090-45f1-980e-5102efae61e9';
-DELETE FROM profiles WHERE id != '4c8ccfae-a090-45f1-980e-5102efae61e9';
+### 1. Connect Lovable Cloud (Supabase)
+Set up the backend with the following database schema:
+
+```text
+┌──────────────┐    ┌───────────────┐    ┌──────────────┐
+│  auth.users   │───▶│   profiles     │───▶│  user_roles   │
+│  (built-in)   │    │  name, avatar  │    │  user_id, role│
+└──────────────┘    └───────────────┘    │  (admin/team/ │
+                                          │   client)     │
+                                          └───────────────┘
+
+┌──────────────┐    ┌───────────────┐    ┌──────────────┐
+│   projects    │───▶│ project_members│◀──│   profiles    │
+│  name, desc,  │    │  project_id,   │    └──────────────┘
+│  deadline,    │    │  user_id, role │
+│  status,      │    └───────────────┘
+│  client_id    │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐    ┌───────────────┐
+│    tasks      │───▶│  comments      │
+│  title, desc, │    │  task_id,      │
+│  status, pri, │    │  user_id,      │
+│  assignee_id, │    │  content,      │
+│  project_id,  │    │  created_at    │
+│  due_date,    │    └───────────────┘
+│  visible_to_  │
+│  client,      │
+│  stage        │
+└──────────────┘
 ```
-**Note**: `auth.users` থেকে ডিলিট করতে Supabase Dashboard ব্যবহার করতে হবে (reserved schema)।
 
-### 2. Database Migration — trigger তৈরি
-```sql
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_new_user();
-```
-এটা নতুন সাইনআপে automatically profiles row তৈরি করবে।
+**Task stages enum:** `backlog`, `todo`, `in_progress`, `internal_review`, `client_review`, `completed`
 
-### 3. ইউজারকে যা করতে হবে
-- Supabase Dashboard → Authentication → Users থেকে `rafikuzzaman10@gmail.com` ও `rafiquzzamanrafi85@gmail.com` ম্যানুয়ালি ডিলিট করতে হবে
-- তারপর নতুন করে সাইনআপ করে টেস্ট করতে পারবেন
+**User roles enum:** `admin`, `team`, `client`
 
-| পরিবর্তন | টুল |
-|---|---|
-| user_roles ও profiles ক্লিনআপ | Data delete |
-| `on_auth_user_created` trigger | DB Migration |
-| auth.users ক্লিনআপ | Supabase Dashboard (ম্যানুয়াল) |
+### 2. Authentication Pages
+- **Login page** (`/login`) — email/password
+- **Signup page** (`/signup`) — with role selection (admin creates accounts, but initial setup needs a first admin)
+- Auto-create profile on signup via DB trigger
+- Role stored in `user_roles` table (security definer function for RLS checks)
+
+### 3. Role-Based Routing & Layout
+- **Auth guard** component wrapping protected routes
+- After login, redirect based on role:
+  - `admin` → `/` (Global Dashboard)
+  - `team` → `/my-tasks`
+  - `client` → `/portal`
+- Sidebar dynamically shows only role-appropriate nav items
+
+### 4. RLS Policies
+- **Projects:** Admins see all. Team members see only projects they're assigned to. Clients see only projects where they're the client.
+- **Tasks:** Same project-scoped access. Clients only see tasks where `visible_to_client = true`.
+- **Comments:** Scoped to task access.
+
+---
+
+## Phase 2: Admin Features
+
+### A. Global Dashboard (existing, connect to real data)
+- Stats from DB queries (active projects, tasks due, team workload)
+- Quick action buttons: "New Project", "Invite Client", "Add Team Member"
+
+### B. Project Management
+- **Create Project form** (dialog): name, description, start date, deadline
+- **Client assignment** dropdown (from users with `client` role)
+- **Team assignment** multi-select (from users with `team` role)
+
+### C. Team & Client Management
+- Invite users by email (Supabase auth invite)
+- Assign roles on invite
+
+---
+
+## Phase 3: Task Engine
+
+### A. Enhanced Kanban Board
+- 6 columns: Backlog → To Do → In Progress → Internal Review → Client Review → Completed
+- Drag & drop between columns
+- Task cards show assignee, priority, due date, client visibility icon
+
+### B. Task Modal/Sheet
+- Full task details: title, description, assignee, due date, priority
+- **Visibility toggle**: "Visible to Client" switch
+- **Comments section**: threaded chat-like UI
+- Subtask support
+
+### C. List View
+- Table with sorting/filtering by status, assignee, priority, project
+
+---
+
+## Phase 4: Client Portal
+
+### A. Client Dashboard (`/portal`)
+- Welcome message, list of their active projects
+- Simplified progress view (timeline/progress bar)
+
+### B. Client Project View
+- Only sees tasks marked `visible_to_client`
+- Can leave comments on tasks in `client_review` stage
+- Approve/request revision buttons
+
+---
+
+## Implementation Approach
+
+Given the scope, I recommend implementing in order:
+1. **Phase 1** first — sets the foundation everything else depends on
+2. **Phase 2** next — admin can manage data
+3. **Phase 3** — task engine with real CRUD
+4. **Phase 4** — client portal
+
+Each phase is a separate conversation/set of prompts. Shall I begin with Phase 1 (Lovable Cloud setup, auth, RBAC, and role-based routing)?
 
