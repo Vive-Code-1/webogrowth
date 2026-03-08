@@ -90,7 +90,7 @@ export default function Dashboard() {
       return { name: format(d, "EEE"), revenue: total };
     });
 
-    return { week, month, year, monthlyChart, weeklyChart };
+    return { week, month, year, thisMonthChart, weeklyChart };
   }, [projects]);
 
   // Task stage distribution
