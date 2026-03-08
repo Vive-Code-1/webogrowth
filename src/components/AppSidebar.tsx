@@ -2,6 +2,8 @@ import { LayoutDashboard, FolderKanban, Users, CheckSquare, Building2, LogOut, U
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { usePendingUsers } from "@/hooks/usePendingUsers";
+import { Badge } from "@/components/ui/badge";
 import {
   Sidebar,
   SidebarContent,
@@ -30,6 +32,8 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { role, signOut } = useAuth();
+  const { pendingUsers } = usePendingUsers();
+  const pendingCount = role === "admin" ? pendingUsers.length : 0;
 
   const navItems = allNavItems.filter(
     (item) => !role || item.roles.includes(role)
@@ -68,6 +72,14 @@ export function AppSidebar() {
                     >
                       <item.icon className="mr-2 h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
+                      {item.url === "/pending-users" && pendingCount > 0 && !collapsed && (
+                        <Badge variant="destructive" className="ml-auto text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center">
+                          {pendingCount}
+                        </Badge>
+                      )}
+                      {item.url === "/pending-users" && pendingCount > 0 && collapsed && (
+                        <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
