@@ -17,7 +17,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar
 } from "recharts";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   startOfWeek, endOfWeek, startOfMonth, endOfMonth,
   startOfYear, endOfYear, isWithinInterval, parseISO,
@@ -47,6 +47,8 @@ export default function Dashboard() {
   const { data: tasks, isLoading: loadingTasks } = useAllTasks();
   const { data: teamMembers } = useTeamMembers();
 
+  const [currency, setCurrency] = useState<"USD" | "BDT">("USD");
+  const BDT_RATE = 110;
   const now = new Date();
 
   const activeProjects = projects?.filter((p) => p.status === "in_progress") || [];
@@ -127,10 +129,19 @@ export default function Dashboard() {
     return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
+  const convertAmount = (val: number) => currency === "BDT" ? val * BDT_RATE : val;
+  const currencySymbol = currency === "BDT" ? "৳" : "$";
+
   const formatCurrency = (val: number) => {
-    if (val >= 1000) return `$${(val / 1000).toFixed(1)}k`;
-    return `$${val}`;
+    const converted = convertAmount(val);
+    if (converted >= 1000) return `${currencySymbol}${(converted / 1000).toFixed(1)}k`;
+    return `${currencySymbol}${Math.round(converted)}`;
   };
+
+  const chartData = useMemo(() => ({
+    thisMonthChart: revenueData.thisMonthChart?.map(d => ({ ...d, revenue: convertAmount(d.revenue) })) || [],
+    weeklyChart: revenueData.weeklyChart?.map(d => ({ ...d, revenue: convertAmount(d.revenue) })) || [],
+  }), [revenueData, currency]);
 
   if (loadingProjects || loadingTasks) {
     return (
@@ -166,7 +177,7 @@ export default function Dashboard() {
         <StatCard
           title="Revenue This Month"
           value={formatCurrency(revenueData.month)}
-          subtitle={`$${revenueData.year.toLocaleString()} this year`}
+          subtitle={`${currencySymbol}${Math.round(convertAmount(revenueData.year)).toLocaleString()} this year`}
           icon={DollarSign}
           iconBg="bg-green-500/10"
           iconColor="text-green-500"
@@ -204,9 +215,24 @@ export default function Dashboard() {
         {/* Revenue Chart */}
         <div className="lg:col-span-2 rounded-xl border bg-card p-5 animate-fade-in">
           <div className="flex items-center justify-between mb-1">
-            <div>
+          <div>
               <h2 className="font-heading text-lg font-semibold text-foreground">Revenue Overview</h2>
               <p className="text-xs text-muted-foreground font-body mt-0.5">Budget from projects by time period</p>
+            </div>
+            <div className="flex items-center gap-2 bg-secondary/60 rounded-full p-0.5">
+              {(["USD", "BDT"] as const).map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setCurrency(c)}
+                  className={`px-3 py-1 text-xs font-body font-medium rounded-full transition-all ${
+                    currency === c
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {c === "USD" ? "$ USD" : "৳ BDT"}
+                </button>
+              ))}
             </div>
           </div>
           <Tabs defaultValue="monthly" className="mt-3">
@@ -216,7 +242,7 @@ export default function Dashboard() {
             </TabsList>
             <TabsContent value="monthly" className="mt-4">
               <ChartContainer config={chartConfig} className="h-[220px] w-full">
-                <AreaChart data={revenueData.thisMonthChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                <AreaChart data={chartData.thisMonthChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
@@ -225,9 +251,9 @@ export default function Dashboard() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} className="font-body" />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Area
+                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${currencySymbol}${v}`} />
+                   <ChartTooltip content={<ChartTooltipContent />} />
+                   <Area
                     type="monotone"
                     dataKey="revenue"
                     stroke="hsl(var(--primary))"
@@ -239,10 +265,10 @@ export default function Dashboard() {
             </TabsContent>
             <TabsContent value="weekly" className="mt-4">
               <ChartContainer config={chartConfig} className="h-[220px] w-full">
-                <BarChart data={revenueData.weeklyChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                <BarChart data={chartData.weeklyChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${currencySymbol}${v}`} />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
                 </BarChart>
