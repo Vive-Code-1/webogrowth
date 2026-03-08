@@ -46,9 +46,13 @@ export function AppSidebar() {
       <SidebarContent className="flex flex-col h-full">
         <div className={`p-4 ${collapsed ? "px-2" : ""}`}>
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center font-heading font-bold text-primary-foreground text-sm shrink-0">
-              W
-            </div>
+            {logoUrl ? (
+              <img src={logoUrl} alt="Logo" className="h-8 w-8 rounded-lg object-contain shrink-0" />
+            ) : (
+              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center font-heading font-bold text-primary-foreground text-sm shrink-0">
+                W
+              </div>
+            )}
             {!collapsed && (
               <span className="font-heading font-bold text-lg text-foreground">
                 WeboGrowth

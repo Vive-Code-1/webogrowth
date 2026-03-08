@@ -50,9 +50,13 @@ export function AppLayout() {
               <div className="flex items-center gap-3">
                 {!isMobile && <SidebarTrigger />}
                 {isMobile && (
-                  <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center font-heading font-bold text-primary-foreground text-xs">
-                    W
-                  </div>
+                  logoUrl ? (
+                    <img src={logoUrl} alt="Logo" className="h-7 w-7 rounded-lg object-contain" />
+                  ) : (
+                    <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center font-heading font-bold text-primary-foreground text-xs">
+                      W
+                    </div>
+                  )
                 )}
                 <span className="text-sm text-muted-foreground font-body">
                   {isMobile ? "WeboGrowth" : "Project Management"}

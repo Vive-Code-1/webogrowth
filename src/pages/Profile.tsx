@@ -200,6 +200,9 @@ export default function Profile() {
         </Button>
       </div>
 
+      {/* Company Logo - Admin only */}
+      <LogoUpload />
+
       {/* Password Change */}
       <div className="rounded-xl border bg-card p-5 space-y-4">
         <div className="flex items-center gap-2">
