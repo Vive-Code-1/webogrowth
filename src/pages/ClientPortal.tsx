@@ -14,8 +14,12 @@ import {
   CalendarDays,
   CircleCheckBig,
   LayoutList,
+  ChevronDown,
 } from "lucide-react";
 import { differenceInDays, format, parseISO } from "date-fns";
+import { useState } from "react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ClientTaskComments } from "@/components/ClientTaskComments";
 
 const statusLabel: Record<string, string> = {
   not_started: "Not Started",
