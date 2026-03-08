@@ -34,6 +34,7 @@ export function AppSidebar() {
   const location = useLocation();
   const { role, signOut } = useAuth();
   const { pendingUsers } = usePendingUsers();
+  const { logoUrl } = useAppSettings();
   const pendingCount = role === "admin" ? pendingUsers.length : 0;
 
   const navItems = allNavItems.filter(
