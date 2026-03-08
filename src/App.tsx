@@ -11,6 +11,8 @@ import ProjectDetail from "@/pages/ProjectDetail";
 import Tasks from "@/pages/Tasks";
 import Team from "@/pages/Team";
 import Clients from "@/pages/Clients";
+import MyTasks from "@/pages/MyTasks";
+import ClientPortal from "@/pages/ClientPortal";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -34,6 +36,8 @@ const App = () => (
               <Route path="/tasks" element={<Tasks />} />
               <Route path="/team" element={<Team />} />
               <Route path="/clients" element={<Clients />} />
+              <Route path="/my-tasks" element={<MyTasks />} />
+              <Route path="/portal" element={<ClientPortal />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
