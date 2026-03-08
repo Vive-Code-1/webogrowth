@@ -1,126 +1,38 @@
 
 
-# Full-Stack Agency PM System with RBAC
+# পেন্ডিং ইউজার না দেখানোর বাগ ফিক্স
 
-This is a large undertaking that transforms the current mock-data frontend into a full-stack application with authentication, role-based access, and distinct portals. I recommend breaking this into phases. Here is the complete plan for **Phase 1** (foundation) and an outline for subsequent phases.
+## সমস্যা
+`handle_new_user()` ফাংশন আছে কিন্তু `auth.users` টেবিলে কোনো **trigger** নেই। তাই নতুন সাইনআপে `profiles` টেবিলে row তৈরি হচ্ছে না → `usePendingUsers` hook কোনো pending user খুঁজে পাচ্ছে না।
 
----
+## সমাধান
 
-## Phase 1: Backend Foundation & Authentication
-
-### 1. Connect Lovable Cloud (Supabase)
-Set up the backend with the following database schema:
-
-```text
-┌──────────────┐    ┌───────────────┐    ┌──────────────┐
-│  auth.users   │───▶│   profiles     │───▶│  user_roles   │
-│  (built-in)   │    │  name, avatar  │    │  user_id, role│
-└──────────────┘    └───────────────┘    │  (admin/team/ │
-                                          │   client)     │
-                                          └───────────────┘
-
-┌──────────────┐    ┌───────────────┐    ┌──────────────┐
-│   projects    │───▶│ project_members│◀──│   profiles    │
-│  name, desc,  │    │  project_id,   │    └──────────────┘
-│  deadline,    │    │  user_id, role │
-│  status,      │    └───────────────┘
-│  client_id    │
-└──────┬───────┘
-       │
-       ▼
-┌──────────────┐    ┌───────────────┐
-│    tasks      │───▶│  comments      │
-│  title, desc, │    │  task_id,      │
-│  status, pri, │    │  user_id,      │
-│  assignee_id, │    │  content,      │
-│  project_id,  │    │  created_at    │
-│  due_date,    │    └───────────────┘
-│  visible_to_  │
-│  client,      │
-│  stage        │
-└──────────────┘
+### 1. Database Migration — trigger তৈরি
+```sql
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_user();
 ```
 
-**Task stages enum:** `backlog`, `todo`, `in_progress`, `internal_review`, `client_review`, `completed`
+### 2. Profiles INSERT policy যোগ
+বর্তমানে profiles টেবিলে INSERT policy নেই। `handle_new_user()` ফাংশন `SECURITY DEFINER` তাই RLS bypass করে — কিন্তু নিরাপত্তার জন্য এবং ভবিষ্যতে কোনো সমস্যা না হওয়ার জন্য profiles এ একটি INSERT policy থাকা উচিত নয় (trigger SECURITY DEFINER দিয়ে কাজ করবে)।
 
-**User roles enum:** `admin`, `team`, `client`
+### 3. বিদ্যমান ইউজারদের জন্য backfill
+যেসব ইউজার ইতিমধ্যে সাইনআপ করেছে কিন্তু profiles এ নেই, তাদের জন্য:
+```sql
+INSERT INTO public.profiles (id, full_name, email)
+SELECT id, COALESCE(raw_user_meta_data->>'full_name', email), email
+FROM auth.users
+WHERE id NOT IN (SELECT id FROM public.profiles)
+ON CONFLICT (id) DO NOTHING;
+```
 
-### 2. Authentication Pages
-- **Login page** (`/login`) — email/password
-- **Signup page** (`/signup`) — with role selection (admin creates accounts, but initial setup needs a first admin)
-- Auto-create profile on signup via DB trigger
-- Role stored in `user_roles` table (security definer function for RLS checks)
+### পরিবর্তন সারাংশ
+| কী | বিবরণ |
+|---|---|
+| DB Migration | `on_auth_user_created` trigger তৈরি + existing users backfill |
+| কোড পরিবর্তন | নেই |
 
-### 3. Role-Based Routing & Layout
-- **Auth guard** component wrapping protected routes
-- After login, redirect based on role:
-  - `admin` → `/` (Global Dashboard)
-  - `team` → `/my-tasks`
-  - `client` → `/portal`
-- Sidebar dynamically shows only role-appropriate nav items
-
-### 4. RLS Policies
-- **Projects:** Admins see all. Team members see only projects they're assigned to. Clients see only projects where they're the client.
-- **Tasks:** Same project-scoped access. Clients only see tasks where `visible_to_client = true`.
-- **Comments:** Scoped to task access.
-
----
-
-## Phase 2: Admin Features
-
-### A. Global Dashboard (existing, connect to real data)
-- Stats from DB queries (active projects, tasks due, team workload)
-- Quick action buttons: "New Project", "Invite Client", "Add Team Member"
-
-### B. Project Management
-- **Create Project form** (dialog): name, description, start date, deadline
-- **Client assignment** dropdown (from users with `client` role)
-- **Team assignment** multi-select (from users with `team` role)
-
-### C. Team & Client Management
-- Invite users by email (Supabase auth invite)
-- Assign roles on invite
-
----
-
-## Phase 3: Task Engine
-
-### A. Enhanced Kanban Board
-- 6 columns: Backlog → To Do → In Progress → Internal Review → Client Review → Completed
-- Drag & drop between columns
-- Task cards show assignee, priority, due date, client visibility icon
-
-### B. Task Modal/Sheet
-- Full task details: title, description, assignee, due date, priority
-- **Visibility toggle**: "Visible to Client" switch
-- **Comments section**: threaded chat-like UI
-- Subtask support
-
-### C. List View
-- Table with sorting/filtering by status, assignee, priority, project
-
----
-
-## Phase 4: Client Portal
-
-### A. Client Dashboard (`/portal`)
-- Welcome message, list of their active projects
-- Simplified progress view (timeline/progress bar)
-
-### B. Client Project View
-- Only sees tasks marked `visible_to_client`
-- Can leave comments on tasks in `client_review` stage
-- Approve/request revision buttons
-
----
-
-## Implementation Approach
-
-Given the scope, I recommend implementing in order:
-1. **Phase 1** first — sets the foundation everything else depends on
-2. **Phase 2** next — admin can manage data
-3. **Phase 3** — task engine with real CRUD
-4. **Phase 4** — client portal
-
-Each phase is a separate conversation/set of prompts. Shall I begin with Phase 1 (Lovable Cloud setup, auth, RBAC, and role-based routing)?
+এটি করার পর নতুন সাইনআপ করা ইউজাররা automatically profiles এ যুক্ত হবে এবং Pending Users পেজে দেখাবে।
 
