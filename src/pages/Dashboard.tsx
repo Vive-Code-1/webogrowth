@@ -268,7 +268,7 @@ export default function Dashboard() {
                 <BarChart data={chartData.weeklyChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${currencySymbol}${v}`} />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
                 </BarChart>
