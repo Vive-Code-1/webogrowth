@@ -14,8 +14,12 @@ import {
   CalendarDays,
   CircleCheckBig,
   LayoutList,
+  ChevronDown,
 } from "lucide-react";
 import { differenceInDays, format, parseISO } from "date-fns";
+import { useState } from "react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ClientTaskComments } from "@/components/ClientTaskComments";
 
 const statusLabel: Record<string, string> = {
   not_started: "Not Started",
@@ -45,6 +49,7 @@ const clientStageLabel: Record<string, string> = {
 
 export default function ClientPortal() {
   const { user } = useAuth();
+  const [openTaskId, setOpenTaskId] = useState<string | null>(null);
   const { data: projects, isLoading: loadingProjects } = useProjects();
   const { data: tasks, isLoading: loadingTasks } = useAllTasks();
 
@@ -207,27 +212,40 @@ export default function ClientPortal() {
                       </div>
                       <div className="space-y-1.5">
                         {projectTasks.map((task) => (
-                          <div
+                          <Collapsible
                             key={task.id}
-                            className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-secondary/40 hover:bg-secondary/60 transition-colors"
+                            open={openTaskId === task.id}
+                            onOpenChange={(open) => setOpenTaskId(open ? task.id : null)}
                           >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <CheckSquare className={`h-3.5 w-3.5 shrink-0 ${task.stage === "completed" ? "text-success" : "text-muted-foreground"}`} />
-                              <div className="min-w-0">
-                                <span className={`text-xs font-body font-medium block truncate ${task.stage === "completed" ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                                  {task.title}
-                                </span>
-                                {task.due_date && (
-                                  <span className="text-[10px] text-muted-foreground font-body">
-                                    Due: {format(parseISO(task.due_date), "MMM d")}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <Badge variant="outline" className="text-[10px] font-body shrink-0">
-                              {clientStageLabel[task.stage] || task.stage}
-                            </Badge>
-                          </div>
+                            <CollapsibleTrigger asChild>
+                              <button
+                                className="w-full flex items-center justify-between gap-3 p-2.5 rounded-lg bg-secondary/40 hover:bg-secondary/60 transition-colors text-left group"
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <CheckSquare className={`h-3.5 w-3.5 shrink-0 ${task.stage === "completed" ? "text-success" : "text-muted-foreground"}`} />
+                                  <div className="min-w-0">
+                                    <span className={`text-xs font-body font-medium block truncate ${task.stage === "completed" ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                                      {task.title}
+                                    </span>
+                                    {task.due_date && (
+                                      <span className="text-[10px] text-muted-foreground font-body">
+                                        Due: {format(parseISO(task.due_date), "MMM d")}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <Badge variant="outline" className="text-[10px] font-body">
+                                    {clientStageLabel[task.stage] || task.stage}
+                                  </Badge>
+                                  <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${openTaskId === task.id ? "rotate-180" : ""}`} />
+                                </div>
+                              </button>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <ClientTaskComments taskId={task.id} />
+                            </CollapsibleContent>
+                          </Collapsible>
                         ))}
                       </div>
                     </div>
