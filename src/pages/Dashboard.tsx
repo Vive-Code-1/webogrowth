@@ -177,7 +177,7 @@ export default function Dashboard() {
         <StatCard
           title="Revenue This Month"
           value={formatCurrency(revenueData.month)}
-          subtitle={`$${revenueData.year.toLocaleString()} this year`}
+          subtitle={`${currencySymbol}${Math.round(convertAmount(revenueData.year)).toLocaleString()} this year`}
           icon={DollarSign}
           iconBg="bg-green-500/10"
           iconColor="text-green-500"
