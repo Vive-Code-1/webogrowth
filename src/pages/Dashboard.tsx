@@ -251,9 +251,9 @@ export default function Dashboard() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} className="font-body" />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Area
+                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${currencySymbol}${v}`} />
+                   <ChartTooltip content={<ChartTooltipContent />} />
+                   <Area
                     type="monotone"
                     dataKey="revenue"
                     stroke="hsl(var(--primary))"
