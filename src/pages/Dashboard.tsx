@@ -168,9 +168,29 @@ export default function Dashboard() {
           <h1 className="font-heading text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground font-body mt-1">Welcome back! Here's your project overview.</p>
         </div>
-        <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground font-body bg-secondary/50 px-3 py-1.5 rounded-full">
-          <Clock className="h-3.5 w-3.5" />
-          {format(now, "MMM d, yyyy")}
+        <div className="hidden sm:flex items-center gap-3">
+          {currency === "BDT" && (
+            <span className="text-[11px] text-muted-foreground font-body">1 USD = ৳{BDT_RATE.toFixed(1)}</span>
+          )}
+          <div className="flex items-center gap-2 bg-secondary/60 rounded-full p-0.5">
+            {(["USD", "BDT"] as const).map((c) => (
+              <button
+                key={c}
+                onClick={() => setCurrency(c)}
+                className={`px-3 py-1 text-xs font-body font-medium rounded-full transition-all ${
+                  currency === c
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {c === "USD" ? "$ USD" : "৳ BDT"}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground font-body bg-secondary/50 px-3 py-1.5 rounded-full">
+            <Clock className="h-3.5 w-3.5" />
+            {format(now, "MMM d, yyyy")}
+          </div>
         </div>
       </div>
 
@@ -216,29 +236,9 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Revenue Chart */}
         <div className="lg:col-span-2 rounded-xl border bg-card p-5 animate-fade-in">
-          <div className="flex items-center justify-between mb-1">
-          <div>
+          <div className="mb-1">
               <h2 className="font-heading text-lg font-semibold text-foreground">Revenue Overview</h2>
               <p className="text-xs text-muted-foreground font-body mt-0.5">Budget from projects by time period</p>
-            </div>
-            <div className="flex items-center gap-2 bg-secondary/60 rounded-full p-0.5">
-              {(["USD", "BDT"] as const).map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setCurrency(c)}
-                  className={`px-3 py-1 text-xs font-body font-medium rounded-full transition-all ${
-                    currency === c
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {c === "USD" ? "$ USD" : "৳ BDT"}
-                </button>
-              ))}
-            </div>
-            {currency === "BDT" && (
-              <span className="text-[11px] text-muted-foreground font-body">1 USD = ৳{BDT_RATE.toFixed(1)}</span>
-            )}
           </div>
           <Tabs defaultValue="monthly" className="mt-3">
             <TabsList className="h-8">
