@@ -39,6 +39,7 @@ const App = () => (
               <Route path="/clients" element={<Clients />} />
               <Route path="/my-tasks" element={<MyTasks />} />
               <Route path="/portal" element={<ClientPortal />} />
+              <Route path="/pending-users" element={<PendingUsers />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
