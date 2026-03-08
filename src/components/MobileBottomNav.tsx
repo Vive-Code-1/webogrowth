@@ -1,4 +1,4 @@
-import { LayoutDashboard, FolderKanban, CheckSquare, User, Building2 } from "lucide-react";
+import { LayoutDashboard, FolderKanban, CheckSquare, User, Building2, Users } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ const navByRole = {
     { title: "Home", url: "/", icon: LayoutDashboard },
     { title: "Projects", url: "/projects", icon: FolderKanban },
     { title: "Tasks", url: "/tasks", icon: CheckSquare },
+    { title: "Team", url: "/team", icon: Users },
     { title: "Clients", url: "/clients", icon: Building2 },
     { title: "Profile", url: "/profile", icon: User },
   ],
@@ -44,17 +45,17 @@ export function MobileBottomNav() {
               >
                 <div
                   className={cn(
-                    "flex items-center justify-center h-10 w-10 rounded-full transition-all duration-200",
+                    "flex items-center justify-center h-9 w-9 rounded-full transition-all duration-200",
                     isActive
                       ? "bg-primary text-primary-foreground shadow-md"
                       : "text-muted-foreground"
                   )}
                 >
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className="h-4 w-4" />
                 </div>
                 <span
                   className={cn(
-                    "text-[10px] font-body transition-colors",
+                    "text-[9px] font-body transition-colors",
                     isActive ? "text-primary font-medium" : "text-muted-foreground"
                   )}
                 >
