@@ -47,6 +47,8 @@ export default function Dashboard() {
   const { data: tasks, isLoading: loadingTasks } = useAllTasks();
   const { data: teamMembers } = useTeamMembers();
 
+  const [currency, setCurrency] = useState<"USD" | "BDT">("USD");
+  const BDT_RATE = 110;
   const now = new Date();
 
   const activeProjects = projects?.filter((p) => p.status === "in_progress") || [];
