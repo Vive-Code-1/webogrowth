@@ -15,6 +15,7 @@ import MyTasks from "@/pages/MyTasks";
 import ClientPortal from "@/pages/ClientPortal";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
+import PendingUsers from "@/pages/PendingUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
