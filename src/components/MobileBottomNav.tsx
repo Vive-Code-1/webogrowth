@@ -1,4 +1,4 @@
-import { LayoutDashboard, FolderKanban, CheckSquare, User, Building2, Users } from "lucide-react";
+import { LayoutDashboard, FolderKanban, CheckSquare, User, Building2, Users, UserPlus } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
