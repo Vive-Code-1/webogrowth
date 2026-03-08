@@ -4,14 +4,12 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<string>("team");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -20,7 +18,7 @@ export default function Signup() {
     e.preventDefault();
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -35,13 +33,8 @@ export default function Signup() {
       return;
     }
 
-    // Assign role
-    if (data.user) {
-      await supabase.from("user_roles").insert({ user_id: data.user.id, role } as any);
-    }
-
     setLoading(false);
-    toast({ title: "Account created!", description: "You can now sign in." });
+    toast({ title: "Account created!", description: "Please wait for an admin to approve your access." });
     navigate("/login");
   };
 
@@ -92,19 +85,6 @@ export default function Signup() {
               minLength={6}
               className="font-body"
             />
-          </div>
-          <div className="space-y-2">
-            <Label className="font-body text-sm">Role</Label>
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger className="font-body">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="team">Team Member</SelectItem>
-                <SelectItem value="client">Client</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
           <Button type="submit" className="w-full font-body" disabled={loading}>
             {loading ? "Creating account…" : "Create account"}

@@ -1,11 +1,17 @@
+import { useState } from "react";
 import { useClients } from "@/hooks/useClients";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Mail, FolderKanban } from "lucide-react";
+import { Mail, FolderKanban, UserPlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { InviteUserDialog } from "@/components/InviteUserDialog";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Clients() {
   const { data: clients, isLoading } = useClients();
+  const { role } = useAuth();
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "?";
@@ -25,15 +31,22 @@ export default function Clients() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl font-bold text-foreground">Clients</h1>
-        <p className="text-sm text-muted-foreground font-body mt-1">{clients?.length || 0} clients</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-heading text-2xl font-bold text-foreground">Clients</h1>
+          <p className="text-sm text-muted-foreground font-body mt-1">{clients?.length || 0} clients</p>
+        </div>
+        {role === "admin" && (
+          <Button onClick={() => setInviteOpen(true)} className="font-body gap-2">
+            <UserPlus className="h-4 w-4" /> Invite Client
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {clients?.length === 0 && (
           <p className="text-sm text-muted-foreground font-body col-span-full text-center py-12">
-            No clients yet. Clients can sign up with the "Client" role.
+            No clients yet. Invite clients using the button above.
           </p>
         )}
         {clients?.map((client) => (
@@ -68,6 +81,8 @@ export default function Clients() {
           </div>
         ))}
       </div>
+
+      <InviteUserDialog open={inviteOpen} onOpenChange={setInviteOpen} defaultRole="client" />
     </div>
   );
 }
