@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { Camera, Loader2, Save, Lock, Eye, EyeOff } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { LogoUpload } from "@/components/LogoUpload";
 
 export default function Profile() {
   const { user, role } = useAuth();
