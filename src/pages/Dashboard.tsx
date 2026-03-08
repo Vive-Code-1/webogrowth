@@ -236,6 +236,9 @@ export default function Dashboard() {
                 </button>
               ))}
             </div>
+            {currency === "BDT" && (
+              <span className="text-[11px] text-muted-foreground font-body">1 USD = ৳{BDT_RATE.toFixed(1)}</span>
+            )}
           </div>
           <Tabs defaultValue="monthly" className="mt-3">
             <TabsList className="h-8">
