@@ -9,10 +9,12 @@ import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAppSettings } from "@/hooks/useAppSettings";
 
 export function AppLayout() {
   const { user, role } = useAuth();
   const isMobile = useIsMobile();
+  const { logoUrl } = useAppSettings();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -48,9 +50,13 @@ export function AppLayout() {
               <div className="flex items-center gap-3">
                 {!isMobile && <SidebarTrigger />}
                 {isMobile && (
-                  <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center font-heading font-bold text-primary-foreground text-xs">
-                    W
-                  </div>
+                  logoUrl ? (
+                    <img src={logoUrl} alt="Logo" className="h-7 w-7 rounded-lg object-contain" />
+                  ) : (
+                    <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center font-heading font-bold text-primary-foreground text-xs">
+                      W
+                    </div>
+                  )
                 )}
                 <span className="text-sm text-muted-foreground font-body">
                   {isMobile ? "WeboGrowth" : "Project Management"}
