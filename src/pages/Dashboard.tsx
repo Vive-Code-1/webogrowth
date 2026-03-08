@@ -216,7 +216,7 @@ export default function Dashboard() {
             </TabsList>
             <TabsContent value="monthly" className="mt-4">
               <ChartContainer config={chartConfig} className="h-[220px] w-full">
-                <AreaChart data={revenueData.monthlyChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                <AreaChart data={revenueData.thisMonthChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
