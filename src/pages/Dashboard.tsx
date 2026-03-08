@@ -7,6 +7,7 @@ import { useProjects } from "@/hooks/useProjects";
 import { useAllTasks } from "@/hooks/useTasks";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
 import { TaskStageBadge, PriorityBadge } from "@/components/TaskStatusBadge";
+import { useExchangeRate } from "@/hooks/useExchangeRate";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
