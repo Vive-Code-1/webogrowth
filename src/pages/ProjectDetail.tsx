@@ -6,11 +6,19 @@ import { KanbanBoard } from "@/components/KanbanBoard";
 import { TaskModal } from "@/components/TaskModal";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Calendar, Mail } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Calendar, DollarSign, Tag, AlertTriangle, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Database } from "@/integrations/supabase/types";
 
 type TaskStage = Database["public"]["Enums"]["task_stage"];
+
+const priorityStyles: Record<string, string> = {
+  low: "bg-muted text-muted-foreground",
+  medium: "bg-primary/20 text-primary",
+  high: "bg-destructive/20 text-destructive",
+  urgent: "bg-destructive text-destructive-foreground",
+};
 
 export default function ProjectDetail() {
   const { id } = useParams();
@@ -71,6 +79,31 @@ export default function ProjectDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Project Info Sidebar */}
         <div className="rounded-lg border bg-card p-5 space-y-4 animate-fade-in">
+          {/* Category & Priority */}
+          <div className="flex flex-wrap gap-1.5">
+            {project.category && (
+              <Badge variant="secondary" className="text-xs gap-1">
+                <Tag className="h-3 w-3" /> {project.category}
+              </Badge>
+            )}
+            {project.priority && (
+              <Badge className={`text-xs border-0 gap-1 ${priorityStyles[project.priority] || ""}`}>
+                <AlertTriangle className="h-3 w-3" />
+                {project.priority.charAt(0).toUpperCase() + project.priority.slice(1)}
+              </Badge>
+            )}
+          </div>
+
+          {/* Budget */}
+          {project.budget && (
+            <div className="flex items-center gap-2 text-sm font-body">
+              <DollarSign className="h-4 w-4 text-primary" />
+              <span className="font-medium text-foreground">
+                {project.currency || "BDT"} {Number(project.budget).toLocaleString()}
+              </span>
+            </div>
+          )}
+
           {project.client && (
             <>
               <h3 className="font-heading font-semibold text-foreground text-sm">Client</h3>
@@ -87,11 +120,18 @@ export default function ProjectDetail() {
               </div>
             </>
           )}
+
           {project.deadline && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground font-body">
               <Calendar className="h-3 w-3" /> Deadline: {project.deadline}
             </div>
           )}
+          {project.start_date && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground font-body">
+              <Calendar className="h-3 w-3" /> Start: {project.start_date}
+            </div>
+          )}
+
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-body">
               <span className="text-muted-foreground">Progress</span>
@@ -99,6 +139,16 @@ export default function ProjectDetail() {
             </div>
             <Progress value={progress} className="h-2" />
           </div>
+
+          {/* Internal Notes */}
+          {project.notes && (
+            <div>
+              <h3 className="font-heading font-semibold text-foreground text-sm flex items-center gap-1.5">
+                <FileText className="h-3.5 w-3.5" /> Notes
+              </h3>
+              <p className="text-xs text-muted-foreground font-body mt-1 whitespace-pre-wrap">{project.notes}</p>
+            </div>
+          )}
 
           <h3 className="font-heading font-semibold text-foreground text-sm pt-2">Team</h3>
           <div className="space-y-2">
