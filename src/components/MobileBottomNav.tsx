@@ -45,13 +45,13 @@ export function MobileBottomNav() {
               >
                 <div
                   className={cn(
-                    "flex items-center justify-center h-10 w-10 rounded-full transition-all duration-200",
+                    "flex items-center justify-center h-9 w-9 rounded-full transition-all duration-200",
                     isActive
                       ? "bg-primary text-primary-foreground shadow-md"
                       : "text-muted-foreground"
                   )}
                 >
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className="h-4 w-4" />
                 </div>
                 <span
                   className={cn(
