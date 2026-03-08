@@ -6,9 +6,60 @@ type Project = Database["public"]["Tables"]["projects"]["Row"];
 type ProjectInsert = Database["public"]["Tables"]["projects"]["Insert"];
 
 export interface ProjectWithDetails extends Project {
+  budget: number | null;
+  currency: string | null;
+  priority: string | null;
+  category: string | null;
+  notes: string | null;
   members: { id: string; user_id: string; role: string; profile: { id: string; full_name: string | null; email: string | null; avatar_url: string | null } }[];
   client: { id: string; full_name: string | null; email: string | null; avatar_url: string | null } | null;
   task_counts: { total: number; completed: number };
+}
+
+async function enrichProject(project: any): Promise<ProjectWithDetails> {
+  const { data: members } = await supabase
+    .from("project_members")
+    .select("id, user_id, role")
+    .eq("project_id", project.id);
+
+  const memberProfiles = await Promise.all(
+    (members || []).map(async (m) => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, avatar_url")
+        .eq("id", m.user_id)
+        .single();
+      return { ...m, profile: profile! };
+    })
+  );
+
+  let client = null;
+  if (project.client_id) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, full_name, email, avatar_url")
+      .eq("id", project.client_id)
+      .single();
+    client = data;
+  }
+
+  const { count: total } = await supabase
+    .from("tasks")
+    .select("*", { count: "exact", head: true })
+    .eq("project_id", project.id);
+
+  const { count: completed } = await supabase
+    .from("tasks")
+    .select("*", { count: "exact", head: true })
+    .eq("project_id", project.id)
+    .eq("stage", "completed");
+
+  return {
+    ...project,
+    members: memberProfiles,
+    client,
+    task_counts: { total: total || 0, completed: completed || 0 },
+  };
 }
 
 export function useProjects() {
@@ -21,59 +72,7 @@ export function useProjects() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-
-      const enriched = await Promise.all(
-        (projects || []).map(async (project) => {
-          // Fetch members with profiles
-          const { data: members } = await supabase
-            .from("project_members")
-            .select("id, user_id, role")
-            .eq("project_id", project.id);
-
-          const memberProfiles = await Promise.all(
-            (members || []).map(async (m) => {
-              const { data: profile } = await supabase
-                .from("profiles")
-                .select("id, full_name, email, avatar_url")
-                .eq("id", m.user_id)
-                .single();
-              return { ...m, profile: profile! };
-            })
-          );
-
-          // Fetch client profile
-          let client = null;
-          if (project.client_id) {
-            const { data } = await supabase
-              .from("profiles")
-              .select("id, full_name, email, avatar_url")
-              .eq("id", project.client_id)
-              .single();
-            client = data;
-          }
-
-          // Fetch task counts
-          const { count: total } = await supabase
-            .from("tasks")
-            .select("*", { count: "exact", head: true })
-            .eq("project_id", project.id);
-
-          const { count: completed } = await supabase
-            .from("tasks")
-            .select("*", { count: "exact", head: true })
-            .eq("project_id", project.id)
-            .eq("stage", "completed");
-
-          return {
-            ...project,
-            members: memberProfiles,
-            client,
-            task_counts: { total: total || 0, completed: completed || 0 },
-          };
-        })
-      );
-
-      return enriched;
+      return Promise.all((projects || []).map(enrichProject));
     },
   });
 }
@@ -84,7 +83,6 @@ export function useProject(id: string | undefined) {
     enabled: !!id,
     queryFn: async (): Promise<ProjectWithDetails | null> => {
       if (!id) return null;
-
       const { data: project, error } = await supabase
         .from("projects")
         .select("*")
@@ -92,50 +90,7 @@ export function useProject(id: string | undefined) {
         .single();
 
       if (error) throw error;
-
-      const { data: members } = await supabase
-        .from("project_members")
-        .select("id, user_id, role")
-        .eq("project_id", project.id);
-
-      const memberProfiles = await Promise.all(
-        (members || []).map(async (m) => {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("id, full_name, email, avatar_url")
-            .eq("id", m.user_id)
-            .single();
-          return { ...m, profile: profile! };
-        })
-      );
-
-      let client = null;
-      if (project.client_id) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("id, full_name, email, avatar_url")
-          .eq("id", project.client_id)
-          .single();
-        client = data;
-      }
-
-      const { count: total } = await supabase
-        .from("tasks")
-        .select("*", { count: "exact", head: true })
-        .eq("project_id", project.id);
-
-      const { count: completed } = await supabase
-        .from("tasks")
-        .select("*", { count: "exact", head: true })
-        .eq("project_id", project.id)
-        .eq("stage", "completed");
-
-      return {
-        ...project,
-        members: memberProfiles,
-        client,
-        task_counts: { total: total || 0, completed: completed || 0 },
-      };
+      return enrichProject(project);
     },
   });
 }
@@ -146,10 +101,16 @@ export function useCreateProject() {
     mutationFn: async (input: {
       name: string;
       description?: string;
+      category?: string;
+      priority?: string;
+      status?: string;
+      budget?: number;
+      currency?: string;
       start_date?: string;
       deadline?: string;
       client_id?: string;
       team_member_ids?: string[];
+      notes?: string;
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
@@ -163,13 +124,18 @@ export function useCreateProject() {
           deadline: input.deadline || null,
           client_id: input.client_id || null,
           created_by: user.id,
-        })
+          status: (input.status as any) || "not_started",
+          budget: input.budget ?? null,
+          currency: input.currency || "BDT",
+          priority: input.priority || "medium",
+          category: input.category || null,
+          notes: input.notes || null,
+        } as any)
         .select()
         .single();
 
       if (error) throw error;
 
-      // Add team members
       if (input.team_member_ids?.length) {
         const { error: memberError } = await supabase
           .from("project_members")
@@ -183,7 +149,6 @@ export function useCreateProject() {
         if (memberError) throw memberError;
       }
 
-      // Add client as project member too
       if (input.client_id) {
         await supabase.from("project_members").insert({
           project_id: project.id,

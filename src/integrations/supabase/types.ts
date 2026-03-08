@@ -114,37 +114,52 @@ export type Database = {
       }
       projects: {
         Row: {
+          budget: number | null
+          category: string | null
           client_id: string | null
           created_at: string
           created_by: string | null
+          currency: string | null
           deadline: string | null
           description: string | null
           id: string
           name: string
+          notes: string | null
+          priority: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["project_status"]
           updated_at: string
         }
         Insert: {
+          budget?: number | null
+          category?: string | null
           client_id?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string | null
           deadline?: string | null
           description?: string | null
           id?: string
           name: string
+          notes?: string | null
+          priority?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
           updated_at?: string
         }
         Update: {
+          budget?: number | null
+          category?: string | null
           client_id?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string | null
           deadline?: string | null
           description?: string | null
           id?: string
           name?: string
+          notes?: string | null
+          priority?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
           updated_at?: string

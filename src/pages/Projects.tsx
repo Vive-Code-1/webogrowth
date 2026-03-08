@@ -14,12 +14,24 @@ const statusLabels: Record<string, string> = {
   on_hold: "On Hold",
 };
 
+const priorityStyles: Record<string, string> = {
+  low: "bg-muted text-muted-foreground",
+  medium: "bg-primary/20 text-primary",
+  high: "bg-destructive/20 text-destructive",
+  urgent: "bg-destructive text-destructive-foreground",
+};
+
 export default function Projects() {
   const { data: projects, isLoading } = useProjects();
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "?";
     return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  };
+
+  const formatBudget = (budget: number | null, currency: string | null) => {
+    if (!budget) return null;
+    return `${currency || "BDT"} ${budget.toLocaleString()}`;
   };
 
   if (isLoading) {
@@ -60,23 +72,47 @@ export default function Projects() {
               to={`/projects/${project.id}`}
               className="rounded-lg border bg-card p-5 card-hover animate-fade-in block"
             >
+              {/* Header */}
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-heading font-semibold text-foreground">{project.name}</h3>
-                <Badge variant="outline" className="text-[10px] capitalize">
+                <h3 className="font-heading font-semibold text-foreground truncate mr-2">{project.name}</h3>
+                <Badge variant="outline" className="text-[10px] capitalize shrink-0">
                   {statusLabels[project.status] || project.status}
                 </Badge>
               </div>
+
+              {/* Category & Priority */}
+              <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                {project.category && (
+                  <Badge variant="secondary" className="text-[10px]">{project.category}</Badge>
+                )}
+                {project.priority && project.priority !== "medium" && (
+                  <Badge className={`text-[10px] border-0 ${priorityStyles[project.priority] || ""}`}>
+                    {project.priority.charAt(0).toUpperCase() + project.priority.slice(1)}
+                  </Badge>
+                )}
+              </div>
+
               {project.description && (
-                <p className="text-xs text-muted-foreground font-body mb-3 line-clamp-2">{project.description}</p>
+                <p className="text-xs text-muted-foreground font-body mb-2 line-clamp-2">{project.description}</p>
               )}
+
+              {/* Budget */}
+              {project.budget && (
+                <p className="text-xs font-medium text-foreground font-body mb-2">
+                  💰 {formatBudget(project.budget, project.currency)}
+                </p>
+              )}
+
               {project.client && (
-                <p className="text-xs text-primary font-body mb-3">
+                <p className="text-xs text-primary font-body mb-2">
                   Client: {project.client.full_name || project.client.email}
                 </p>
               )}
               {project.deadline && (
-                <p className="text-xs text-muted-foreground font-body mb-3">Due {project.deadline}</p>
+                <p className="text-xs text-muted-foreground font-body mb-2">Due {project.deadline}</p>
               )}
+
+              {/* Footer */}
               <div className="flex items-center justify-between">
                 <div className="flex -space-x-2">
                   {project.members.slice(0, 4).map((m) => (
