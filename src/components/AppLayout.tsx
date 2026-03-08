@@ -14,6 +14,7 @@ import { useAppSettings } from "@/hooks/useAppSettings";
 export function AppLayout() {
   const { user, role } = useAuth();
   const isMobile = useIsMobile();
+  const { logoUrl } = useAppSettings();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
