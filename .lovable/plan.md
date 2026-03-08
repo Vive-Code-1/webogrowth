@@ -1,126 +1,50 @@
 
 
-# Full-Stack Agency PM System with RBAC
+# প্রোফাইল পাসওয়ার্ড চেঞ্জ + মোবাইল রেস্পন্সিভ + প্রোফাইল পিকচার সব রোলে
 
-This is a large undertaking that transforms the current mock-data frontend into a full-stack application with authentication, role-based access, and distinct portals. I recommend breaking this into phases. Here is the complete plan for **Phase 1** (foundation) and an outline for subsequent phases.
+## বর্তমান অবস্থা
+- Profile পেজ আছে — avatar upload ও name edit কাজ করে
+- পাসওয়ার্ড চেঞ্জ অপশন নেই
+- MobileBottomNav এ Profile লিংক আছে সব রোলের জন্য
+- AppLayout এ header এ avatar দেখায় কিন্তু প্রোফাইল লিংক নেই
+- কিছু পেজে টেবিল/কার্ড মোবাইলে overflow হতে পারে
 
----
+## পরিবর্তনসমূহ
 
-## Phase 1: Backend Foundation & Authentication
+### 1. Profile পেজে পাসওয়ার্ড চেঞ্জ সেকশন — `src/pages/Profile.tsx`
+- "Change Password" সেকশন যোগ করবো
+- Current password field লাগবে না (Supabase `updateUser({ password })` কল করলেই হয় logged-in অবস্থায়)
+- New password + Confirm password ফিল্ড
+- Validation: minimum 6 chars, passwords match
+- `supabase.auth.updateUser({ password: newPassword })` কল
 
-### 1. Connect Lovable Cloud (Supabase)
-Set up the backend with the following database schema:
+### 2. AppLayout Header এ প্রোফাইল লিংক — `src/components/AppLayout.tsx`
+- Header এর Avatar ক্লিক করলে `/profile` এ যাবে
+- Avatar তে প্রোফাইল ইমেজ দেখাবে (যদি আপলোড করা থাকে)
 
-```text
-┌──────────────┐    ┌───────────────┐    ┌──────────────┐
-│  auth.users   │───▶│   profiles     │───▶│  user_roles   │
-│  (built-in)   │    │  name, avatar  │    │  user_id, role│
-└──────────────┘    └───────────────┘    │  (admin/team/ │
-                                          │   client)     │
-                                          └───────────────┘
+### 3. মোবাইল রেস্পন্সিভ উন্নতি — একাধিক পেজ
+নিচের পেজগুলোতে মোবাইল ফ্রেন্ডলি করবো:
 
-┌──────────────┐    ┌───────────────┐    ┌──────────────┐
-│   projects    │───▶│ project_members│◀──│   profiles    │
-│  name, desc,  │    │  project_id,   │    └──────────────┘
-│  deadline,    │    │  user_id, role │
-│  status,      │    └───────────────┘
-│  client_id    │
-└──────┬───────┘
-       │
-       ▼
-┌──────────────┐    ┌───────────────┐
-│    tasks      │───▶│  comments      │
-│  title, desc, │    │  task_id,      │
-│  status, pri, │    │  user_id,      │
-│  assignee_id, │    │  content,      │
-│  project_id,  │    │  created_at    │
-│  due_date,    │    └───────────────┘
-│  visible_to_  │
-│  client,      │
-│  stage        │
-└──────────────┘
-```
+- **Tasks.tsx**: ফিল্টার row কে `flex-wrap` করবো, টেবিল row কে কার্ড ভিউ করবো মোবাইলে
+- **Team.tsx / Clients.tsx**: কার্ড গ্রিড ইতিমধ্যে `grid-cols-1 md:grid-cols-2` আছে — ঠিক আছে
+- **ProjectDetail.tsx**: Info grid ও Kanban board মোবাইলে horizontal scroll যোগ
+- **PendingUsers.tsx**: কার্ড লেআউট মোবাইলে stack করবো
+- **Dashboard.tsx**: Currency toggle মোবাইলে ইতিমধ্যে visible — stat cards গ্রিড ঠিক করবো
+- **Profile.tsx**: ইতিমধ্যে `max-w-lg mx-auto` — মোবাইলে ভালো কাজ করবে
 
-**Task stages enum:** `backlog`, `todo`, `in_progress`, `internal_review`, `client_review`, `completed`
+### 4. কোনো ডাটাবেজ পরিবর্তন লাগবে না
+- avatars bucket ইতিমধ্যে আছে
+- profiles টেবিলে avatar_url কলাম আছে
+- RLS policies ঠিক আছে (users can update own profile)
 
-**User roles enum:** `admin`, `team`, `client`
-
-### 2. Authentication Pages
-- **Login page** (`/login`) — email/password
-- **Signup page** (`/signup`) — with role selection (admin creates accounts, but initial setup needs a first admin)
-- Auto-create profile on signup via DB trigger
-- Role stored in `user_roles` table (security definer function for RLS checks)
-
-### 3. Role-Based Routing & Layout
-- **Auth guard** component wrapping protected routes
-- After login, redirect based on role:
-  - `admin` → `/` (Global Dashboard)
-  - `team` → `/my-tasks`
-  - `client` → `/portal`
-- Sidebar dynamically shows only role-appropriate nav items
-
-### 4. RLS Policies
-- **Projects:** Admins see all. Team members see only projects they're assigned to. Clients see only projects where they're the client.
-- **Tasks:** Same project-scoped access. Clients only see tasks where `visible_to_client = true`.
-- **Comments:** Scoped to task access.
-
----
-
-## Phase 2: Admin Features
-
-### A. Global Dashboard (existing, connect to real data)
-- Stats from DB queries (active projects, tasks due, team workload)
-- Quick action buttons: "New Project", "Invite Client", "Add Team Member"
-
-### B. Project Management
-- **Create Project form** (dialog): name, description, start date, deadline
-- **Client assignment** dropdown (from users with `client` role)
-- **Team assignment** multi-select (from users with `team` role)
-
-### C. Team & Client Management
-- Invite users by email (Supabase auth invite)
-- Assign roles on invite
-
----
-
-## Phase 3: Task Engine
-
-### A. Enhanced Kanban Board
-- 6 columns: Backlog → To Do → In Progress → Internal Review → Client Review → Completed
-- Drag & drop between columns
-- Task cards show assignee, priority, due date, client visibility icon
-
-### B. Task Modal/Sheet
-- Full task details: title, description, assignee, due date, priority
-- **Visibility toggle**: "Visible to Client" switch
-- **Comments section**: threaded chat-like UI
-- Subtask support
-
-### C. List View
-- Table with sorting/filtering by status, assignee, priority, project
-
----
-
-## Phase 4: Client Portal
-
-### A. Client Dashboard (`/portal`)
-- Welcome message, list of their active projects
-- Simplified progress view (timeline/progress bar)
-
-### B. Client Project View
-- Only sees tasks marked `visible_to_client`
-- Can leave comments on tasks in `client_review` stage
-- Approve/request revision buttons
-
----
-
-## Implementation Approach
-
-Given the scope, I recommend implementing in order:
-1. **Phase 1** first — sets the foundation everything else depends on
-2. **Phase 2** next — admin can manage data
-3. **Phase 3** — task engine with real CRUD
-4. **Phase 4** — client portal
-
-Each phase is a separate conversation/set of prompts. Shall I begin with Phase 1 (Lovable Cloud setup, auth, RBAC, and role-based routing)?
+### ফাইল পরিবর্তন তালিকা:
+| ফাইল | পরিবর্তন |
+|---|---|
+| `src/pages/Profile.tsx` | পাসওয়ার্ড চেঞ্জ সেকশন যোগ |
+| `src/components/AppLayout.tsx` | Avatar কে profile link করা + profile image দেখানো |
+| `src/pages/Tasks.tsx` | মোবাইল কার্ড ভিউ, filter wrap |
+| `src/pages/ProjectDetail.tsx` | মোবাইল responsive info + kanban |
+| `src/pages/PendingUsers.tsx` | মোবাইল stack layout |
+| `src/pages/MyTasks.tsx` | মোবাইল কার্ড spacing |
+| `src/pages/Dashboard.tsx` | Stat grid mobile fix |
 
