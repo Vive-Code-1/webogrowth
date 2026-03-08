@@ -1,14 +1,40 @@
 import { FolderKanban, CheckSquare, Users, TrendingUp } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
-import { projects, tasks, teamMembers } from "@/lib/mock-data";
-import { TaskStatusBadge, PriorityBadge } from "@/components/TaskStatusBadge";
+import { useProjects } from "@/hooks/useProjects";
+import { useAllTasks } from "@/hooks/useTasks";
+import { useTeamMembers } from "@/hooks/useTeamMembers";
+import { TaskStageBadge, PriorityBadge } from "@/components/TaskStatusBadge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
-  const activeTasks = tasks.filter(t => t.status !== "done");
-  const completedTasks = tasks.filter(t => t.status === "done");
+  const { data: projects, isLoading: loadingProjects } = useProjects();
+  const { data: tasks, isLoading: loadingTasks } = useAllTasks();
+  const { data: teamMembers } = useTeamMembers();
+
+  const activeProjects = projects?.filter((p) => p.status === "in_progress") || [];
+  const allTasks = tasks || [];
+  const completedTasks = allTasks.filter((t) => t.stage === "completed");
+  const activeTasks = allTasks.filter((t) => t.stage !== "completed");
+  const completionRate = allTasks.length > 0 ? Math.round((completedTasks.length / allTasks.length) * 100) : 0;
+
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return "?";
+    return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  };
+
+  if (loadingProjects || loadingTasks) {
+    return (
+      <div className="space-y-6">
+        <div><Skeleton className="h-8 w-48" /><Skeleton className="h-4 w-64 mt-2" /></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-28" />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -18,10 +44,10 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Active Projects" value={projects.filter(p => p.status === "active").length} subtitle="2 due this month" icon={FolderKanban} trend="+2" />
-        <StatCard title="Total Tasks" value={tasks.length} subtitle={`${completedTasks.length} completed`} icon={CheckSquare} trend="+5" />
-        <StatCard title="Team Members" value={teamMembers.length} subtitle="All active" icon={Users} />
-        <StatCard title="Completion Rate" value="72%" subtitle="This month" icon={TrendingUp} trend="+8%" />
+        <StatCard title="Active Projects" value={activeProjects.length} subtitle={`${projects?.length || 0} total`} icon={FolderKanban} />
+        <StatCard title="Total Tasks" value={allTasks.length} subtitle={`${completedTasks.length} completed`} icon={CheckSquare} />
+        <StatCard title="Team Members" value={teamMembers?.length || 0} subtitle="All active" icon={Users} />
+        <StatCard title="Completion Rate" value={`${completionRate}%`} subtitle="Overall" icon={TrendingUp} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -32,35 +58,45 @@ export default function Dashboard() {
             <Link to="/projects" className="text-xs text-primary hover:underline font-body">View All</Link>
           </div>
           <div className="space-y-4">
-            {projects.filter(p => p.status === "active").map(project => (
-              <div key={project.id} className="p-4 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-heading font-medium text-foreground text-sm">{project.name}</h3>
-                  <span className="text-xs text-muted-foreground font-body">Due {project.deadline}</span>
-                </div>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-xs text-muted-foreground font-body">{project.client.company}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex -space-x-2">
-                    {project.teamMembers.slice(0, 3).map(m => (
-                      <Avatar key={m.id} className="h-6 w-6 border-2 border-card">
-                        <AvatarFallback className="bg-primary/20 text-primary text-[10px] font-body">{m.avatar}</AvatarFallback>
-                      </Avatar>
-                    ))}
-                    {project.teamMembers.length > 3 && (
-                      <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[10px] text-muted-foreground font-body border-2 border-card">
-                        +{project.teamMembers.length - 3}
-                      </div>
-                    )}
+            {activeProjects.length === 0 && (
+              <p className="text-sm text-muted-foreground font-body">No active projects yet.</p>
+            )}
+            {activeProjects.slice(0, 5).map((project) => {
+              const progress = project.task_counts.total > 0
+                ? Math.round((project.task_counts.completed / project.task_counts.total) * 100)
+                : 0;
+              return (
+                <Link key={project.id} to={`/projects/${project.id}`} className="block p-4 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-heading font-medium text-foreground text-sm">{project.name}</h3>
+                    {project.deadline && <span className="text-xs text-muted-foreground font-body">Due {project.deadline}</span>}
                   </div>
-                  <div className="flex items-center gap-2 flex-1 max-w-[200px] ml-4">
-                    <Progress value={project.progress} className="h-1.5" />
-                    <span className="text-xs text-muted-foreground font-body w-8">{project.progress}%</span>
+                  {project.client && (
+                    <p className="text-xs text-muted-foreground font-body mb-3">{project.client.full_name || project.client.email}</p>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex -space-x-2">
+                      {project.members.slice(0, 3).map((m) => (
+                        <Avatar key={m.id} className="h-6 w-6 border-2 border-card">
+                          <AvatarFallback className="bg-primary/20 text-primary text-[10px] font-body">
+                            {getInitials(m.profile?.full_name)}
+                          </AvatarFallback>
+                        </Avatar>
+                      ))}
+                      {project.members.length > 3 && (
+                        <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[10px] text-muted-foreground font-body border-2 border-card">
+                          +{project.members.length - 3}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-1 max-w-[200px] ml-4">
+                      <Progress value={progress} className="h-1.5" />
+                      <span className="text-xs text-muted-foreground font-body w-8">{progress}%</span>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </div>
 
@@ -71,19 +107,24 @@ export default function Dashboard() {
             <Link to="/tasks" className="text-xs text-primary hover:underline font-body">View All</Link>
           </div>
           <div className="space-y-3">
-            {activeTasks.slice(0, 5).map(task => (
+            {activeTasks.length === 0 && (
+              <p className="text-sm text-muted-foreground font-body">No active tasks.</p>
+            )}
+            {activeTasks.slice(0, 5).map((task) => (
               <div key={task.id} className="p-3 rounded-lg bg-secondary/50 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-body font-medium text-foreground">{task.title}</span>
-                </div>
+                <span className="text-sm font-body font-medium text-foreground">{task.title}</span>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <TaskStatusBadge status={task.status} />
+                    <TaskStageBadge stage={task.stage} />
                     <PriorityBadge priority={task.priority} />
                   </div>
-                  <Avatar className="h-5 w-5">
-                    <AvatarFallback className="bg-primary/20 text-primary text-[8px] font-body">{task.assignee.avatar}</AvatarFallback>
-                  </Avatar>
+                  {task.assignee && (
+                    <Avatar className="h-5 w-5">
+                      <AvatarFallback className="bg-primary/20 text-primary text-[8px] font-body">
+                        {getInitials(task.assignee.full_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                 </div>
               </div>
             ))}

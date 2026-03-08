@@ -1,98 +1,126 @@
 
 
-# Phase 2 & 3: Admin Features + Task Engine
+# Full-Stack Agency PM System with RBAC
 
-## Current State
-All pages use hardcoded mock data. Auth and DB schema with RLS are in place. No CRUD operations, no real data fetching, no task modals, no drag-and-drop.
+This is a large undertaking that transforms the current mock-data frontend into a full-stack application with authentication, role-based access, and distinct portals. I recommend breaking this into phases. Here is the complete plan for **Phase 1** (foundation) and an outline for subsequent phases.
 
-## What Will Be Built
+---
 
-### Phase 2: Admin Features (Real Data + CRUD)
+## Phase 1: Backend Foundation & Authentication
 
-**A. React Query hooks layer** (`src/hooks/`)
-- `useProjects` — fetch projects with members, client info, task counts
-- `useTasks` — fetch tasks with assignee profiles
-- `useTeamMembers` — fetch profiles with `team` role + task stats
-- `useClients` — fetch profiles with `client` role + project associations
-- `useComments` — fetch/add comments for a task
-- All hooks use `@tanstack/react-query` for caching/mutations
+### 1. Connect Lovable Cloud (Supabase)
+Set up the backend with the following database schema:
 
-**B. Dashboard** — Replace mock data with real queries (project count, task stats, completion rate)
-
-**C. Project Management**
-- Create Project dialog: name, description, start/deadline dates
-- Client assignment dropdown (users with `client` role)
-- Team member multi-select (users with `team` role)
-- Inserts into `projects` + `project_members` tables
-
-**D. Team & Client pages** — Real data from profiles + user_roles join
-
-**E. Role-based routing**
-- Add `/portal` and `/my-tasks` routes
-- Client Portal: simplified project view, only `visible_to_client` tasks
-- My Tasks: team member's assigned tasks across projects
-
-### Phase 3: Task Engine
-
-**A. 6-Column Kanban Board** (in ProjectDetail)
-- Columns: Backlog, To Do, In Progress, Internal Review, Client Review, Completed
-- Drag-and-drop using HTML5 drag events (no extra dependency)
-- Updates `stage` column via Supabase mutation
-
-**B. Task Creation/Edit Modal** (Sheet component)
-- Title, description, assignee dropdown, due date, priority select
-- Visibility toggle ("Visible to Client" switch)
-- Comments section with real-time-ish thread
-- Create and update mutations
-
-**C. Task List View** (Tasks page)
-- Table with real data, filterable by project/status/priority/assignee
-- Click row to open task modal
-
-**D. TaskStatusBadge update** — Support new 6 task stages
-
-### Database Changes Needed
-- **Migration**: Add `INSERT` policy on `profiles` table for the `handle_new_user` trigger (currently profiles can't be inserted, but the trigger runs as SECURITY DEFINER so it should work). Also need to add task INSERT policy for team members on their assigned projects.
-- Add RLS policy: Team members can INSERT tasks on projects they belong to
-- Add RLS policy: Team members can INSERT comments
-
-### New Files
 ```text
-src/hooks/useProjects.ts
-src/hooks/useTasks.ts  
-src/hooks/useTeamMembers.ts
-src/hooks/useClients.ts
-src/hooks/useComments.ts
-src/components/CreateProjectDialog.tsx
-src/components/TaskModal.tsx
-src/components/KanbanBoard.tsx
-src/components/TaskFilters.tsx
-src/pages/MyTasks.tsx
-src/pages/ClientPortal.tsx
+┌──────────────┐    ┌───────────────┐    ┌──────────────┐
+│  auth.users   │───▶│   profiles     │───▶│  user_roles   │
+│  (built-in)   │    │  name, avatar  │    │  user_id, role│
+└──────────────┘    └───────────────┘    │  (admin/team/ │
+                                          │   client)     │
+                                          └───────────────┘
+
+┌──────────────┐    ┌───────────────┐    ┌──────────────┐
+│   projects    │───▶│ project_members│◀──│   profiles    │
+│  name, desc,  │    │  project_id,   │    └──────────────┘
+│  deadline,    │    │  user_id, role │
+│  status,      │    └───────────────┘
+│  client_id    │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐    ┌───────────────┐
+│    tasks      │───▶│  comments      │
+│  title, desc, │    │  task_id,      │
+│  status, pri, │    │  user_id,      │
+│  assignee_id, │    │  content,      │
+│  project_id,  │    │  created_at    │
+│  due_date,    │    └───────────────┘
+│  visible_to_  │
+│  client,      │
+│  stage        │
+└──────────────┘
 ```
 
-### Modified Files
-```text
-src/App.tsx              — add /my-tasks, /portal routes
-src/pages/Dashboard.tsx  — real Supabase queries
-src/pages/Projects.tsx   — real data + create button
-src/pages/ProjectDetail.tsx — 6-col kanban + drag-drop + task modal
-src/pages/Tasks.tsx      — real data + filters + task modal
-src/pages/Team.tsx       — real data
-src/pages/Clients.tsx    — real data
-src/components/TaskStatusBadge.tsx — support 6 stages
-src/components/AppSidebar.tsx — ensure /my-tasks, /portal routes
-```
+**Task stages enum:** `backlog`, `todo`, `in_progress`, `internal_review`, `client_review`, `completed`
 
-### Implementation Order
-1. DB migration (team task insert + comment insert policies)
-2. React Query hooks for all data
-3. Update TaskStatusBadge for 6 stages
-4. Dashboard with real data
-5. CreateProjectDialog + Projects page
-6. ProjectDetail with KanbanBoard (drag-drop) + TaskModal
-7. Tasks page with filters
-8. Team & Clients pages with real data
-9. MyTasks + ClientPortal pages
-10. Wire up routes
+**User roles enum:** `admin`, `team`, `client`
+
+### 2. Authentication Pages
+- **Login page** (`/login`) — email/password
+- **Signup page** (`/signup`) — with role selection (admin creates accounts, but initial setup needs a first admin)
+- Auto-create profile on signup via DB trigger
+- Role stored in `user_roles` table (security definer function for RLS checks)
+
+### 3. Role-Based Routing & Layout
+- **Auth guard** component wrapping protected routes
+- After login, redirect based on role:
+  - `admin` → `/` (Global Dashboard)
+  - `team` → `/my-tasks`
+  - `client` → `/portal`
+- Sidebar dynamically shows only role-appropriate nav items
+
+### 4. RLS Policies
+- **Projects:** Admins see all. Team members see only projects they're assigned to. Clients see only projects where they're the client.
+- **Tasks:** Same project-scoped access. Clients only see tasks where `visible_to_client = true`.
+- **Comments:** Scoped to task access.
+
+---
+
+## Phase 2: Admin Features
+
+### A. Global Dashboard (existing, connect to real data)
+- Stats from DB queries (active projects, tasks due, team workload)
+- Quick action buttons: "New Project", "Invite Client", "Add Team Member"
+
+### B. Project Management
+- **Create Project form** (dialog): name, description, start date, deadline
+- **Client assignment** dropdown (from users with `client` role)
+- **Team assignment** multi-select (from users with `team` role)
+
+### C. Team & Client Management
+- Invite users by email (Supabase auth invite)
+- Assign roles on invite
+
+---
+
+## Phase 3: Task Engine
+
+### A. Enhanced Kanban Board
+- 6 columns: Backlog → To Do → In Progress → Internal Review → Client Review → Completed
+- Drag & drop between columns
+- Task cards show assignee, priority, due date, client visibility icon
+
+### B. Task Modal/Sheet
+- Full task details: title, description, assignee, due date, priority
+- **Visibility toggle**: "Visible to Client" switch
+- **Comments section**: threaded chat-like UI
+- Subtask support
+
+### C. List View
+- Table with sorting/filtering by status, assignee, priority, project
+
+---
+
+## Phase 4: Client Portal
+
+### A. Client Dashboard (`/portal`)
+- Welcome message, list of their active projects
+- Simplified progress view (timeline/progress bar)
+
+### B. Client Project View
+- Only sees tasks marked `visible_to_client`
+- Can leave comments on tasks in `client_review` stage
+- Approve/request revision buttons
+
+---
+
+## Implementation Approach
+
+Given the scope, I recommend implementing in order:
+1. **Phase 1** first — sets the foundation everything else depends on
+2. **Phase 2** next — admin can manage data
+3. **Phase 3** — task engine with real CRUD
+4. **Phase 4** — client portal
+
+Each phase is a separate conversation/set of prompts. Shall I begin with Phase 1 (Lovable Cloud setup, auth, RBAC, and role-based routing)?
 
