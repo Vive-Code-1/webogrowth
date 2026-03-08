@@ -168,7 +168,7 @@ export default function Dashboard() {
           <h1 className="font-heading text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground font-body mt-1">Welcome back! Here's your project overview.</p>
         </div>
-        <div className="hidden sm:flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {currency === "BDT" && (
             <span className="text-[11px] text-muted-foreground font-body">1 USD = ৳{BDT_RATE.toFixed(1)}</span>
           )}
