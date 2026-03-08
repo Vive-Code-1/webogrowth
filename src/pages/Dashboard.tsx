@@ -49,7 +49,8 @@ export default function Dashboard() {
   const { data: teamMembers } = useTeamMembers();
 
   const [currency, setCurrency] = useState<"USD" | "BDT">("USD");
-  const BDT_RATE = 110;
+  const { data: bdtRate = 110 } = useExchangeRate();
+  const BDT_RATE = bdtRate;
   const now = new Date();
 
   const activeProjects = projects?.filter((p) => p.status === "in_progress") || [];
