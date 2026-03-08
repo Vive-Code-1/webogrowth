@@ -56,7 +56,7 @@ export default function Tasks() {
           </SelectContent>
         </Select>
         <Select value={filterPriority} onValueChange={setFilterPriority}>
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-32 sm:w-32">
             <SelectValue placeholder="All Priorities" />
           </SelectTrigger>
           <SelectContent>
