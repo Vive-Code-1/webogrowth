@@ -10,6 +10,7 @@ const navByRole = {
     { title: "Tasks", url: "/tasks", icon: CheckSquare },
     { title: "Team", url: "/team", icon: Users },
     { title: "Clients", url: "/clients", icon: Building2 },
+    { title: "Pending", url: "/pending-users", icon: UserPlus },
     { title: "Profile", url: "/profile", icon: User },
   ],
   team: [
