@@ -43,9 +43,9 @@ export default function Tasks() {
         <p className="text-sm text-muted-foreground font-body mt-1">{filtered.length} tasks</p>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <Select value={filterStage} onValueChange={setFilterStage}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-36 sm:w-40">
             <SelectValue placeholder="All Stages" />
           </SelectTrigger>
           <SelectContent>
