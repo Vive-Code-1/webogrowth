@@ -168,9 +168,29 @@ export default function Dashboard() {
           <h1 className="font-heading text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground font-body mt-1">Welcome back! Here's your project overview.</p>
         </div>
-        <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground font-body bg-secondary/50 px-3 py-1.5 rounded-full">
-          <Clock className="h-3.5 w-3.5" />
-          {format(now, "MMM d, yyyy")}
+        <div className="hidden sm:flex items-center gap-3">
+          {currency === "BDT" && (
+            <span className="text-[11px] text-muted-foreground font-body">1 USD = ৳{BDT_RATE.toFixed(1)}</span>
+          )}
+          <div className="flex items-center gap-2 bg-secondary/60 rounded-full p-0.5">
+            {(["USD", "BDT"] as const).map((c) => (
+              <button
+                key={c}
+                onClick={() => setCurrency(c)}
+                className={`px-3 py-1 text-xs font-body font-medium rounded-full transition-all ${
+                  currency === c
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {c === "USD" ? "$ USD" : "৳ BDT"}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground font-body bg-secondary/50 px-3 py-1.5 rounded-full">
+            <Clock className="h-3.5 w-3.5" />
+            {format(now, "MMM d, yyyy")}
+          </div>
         </div>
       </div>
 
