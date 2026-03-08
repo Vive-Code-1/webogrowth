@@ -265,7 +265,7 @@ export default function Dashboard() {
             </TabsContent>
             <TabsContent value="weekly" className="mt-4">
               <ChartContainer config={chartConfig} className="h-[220px] w-full">
-                <BarChart data={revenueData.weeklyChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                <BarChart data={chartData.weeklyChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
