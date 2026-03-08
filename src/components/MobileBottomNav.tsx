@@ -55,7 +55,7 @@ export function MobileBottomNav() {
                 </div>
                 <span
                   className={cn(
-                    "text-[10px] font-body transition-colors",
+                    "text-[9px] font-body transition-colors",
                     isActive ? "text-primary font-medium" : "text-muted-foreground"
                   )}
                 >
