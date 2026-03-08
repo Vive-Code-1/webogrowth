@@ -1,6 +1,7 @@
-import { LayoutDashboard, FolderKanban, Users, CheckSquare, Building2 } from "lucide-react";
+import { LayoutDashboard, FolderKanban, Users, CheckSquare, Building2, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
   SidebarContent,
@@ -13,22 +14,29 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const navItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Projects", url: "/projects", icon: FolderKanban },
-  { title: "Tasks", url: "/tasks", icon: CheckSquare },
-  { title: "Team", url: "/team", icon: Users },
-  { title: "Clients", url: "/clients", icon: Building2 },
+const allNavItems = [
+  { title: "Dashboard", url: "/", icon: LayoutDashboard, roles: ["admin"] },
+  { title: "Projects", url: "/projects", icon: FolderKanban, roles: ["admin", "team"] },
+  { title: "Tasks", url: "/tasks", icon: CheckSquare, roles: ["admin", "team"] },
+  { title: "My Tasks", url: "/my-tasks", icon: CheckSquare, roles: ["team"] },
+  { title: "Team", url: "/team", icon: Users, roles: ["admin"] },
+  { title: "Clients", url: "/clients", icon: Building2, roles: ["admin"] },
+  { title: "Portal", url: "/portal", icon: FolderKanban, roles: ["client"] },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { role, signOut } = useAuth();
+
+  const navItems = allNavItems.filter(
+    (item) => !role || item.roles.includes(role)
+  );
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarContent>
+      <SidebarContent className="flex flex-col h-full">
         <div className={`p-4 ${collapsed ? "px-2" : ""}`}>
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center font-heading font-bold text-primary-foreground text-sm shrink-0">
@@ -66,6 +74,17 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <div className="mt-auto p-2">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={signOut} className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />
+                {!collapsed && <span className="font-body text-sm">Sign out</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </div>
       </SidebarContent>
     </Sidebar>
   );
