@@ -31,7 +31,7 @@ interface TaskModalProps {
   projects?: { id: string; name: string }[];
 }
 
-export function TaskModal({ open, onOpenChange, task, projectId, teamMembers }: TaskModalProps) {
+export function TaskModal({ open, onOpenChange, task, projectId, teamMembers, projects }: TaskModalProps) {
   const isEditing = !!task;
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || "");
@@ -40,6 +40,7 @@ export function TaskModal({ open, onOpenChange, task, projectId, teamMembers }: 
   const [assigneeId, setAssigneeId] = useState(task?.assignee_id || "");
   const [dueDate, setDueDate] = useState(task?.due_date || "");
   const [visibleToClient, setVisibleToClient] = useState(task?.visible_to_client || false);
+  const [selectedProjectId, setSelectedProjectId] = useState(projectId || "");
   const [commentText, setCommentText] = useState("");
 
   const createTask = useCreateTask();
