@@ -76,9 +76,9 @@ export default function ProjectDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Project Info Sidebar */}
-        <div className="rounded-lg border bg-card p-5 space-y-4 animate-fade-in">
+      {/* Project Info Card */}
+      <div className="rounded-lg border bg-card p-5 animate-fade-in">
+        <div className="flex flex-wrap gap-x-6 gap-y-4 items-start">
           {/* Category & Priority */}
           <div className="flex flex-wrap gap-1.5">
             {project.category && (
@@ -104,35 +104,37 @@ export default function ProjectDetail() {
             </div>
           )}
 
+          {/* Client */}
           {project.client && (
-            <>
-              <h3 className="font-heading font-semibold text-foreground text-sm">Client</h3>
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-primary/20 text-primary font-body text-sm">
-                    {getInitials(project.client.full_name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-body font-medium text-foreground text-sm">{project.client.full_name || "Unnamed"}</p>
-                  <p className="text-xs text-muted-foreground font-body">{project.client.email}</p>
-                </div>
+            <div className="flex items-center gap-2">
+              <Avatar className="h-7 w-7">
+                <AvatarFallback className="bg-primary/20 text-primary font-body text-[10px]">
+                  {getInitials(project.client.full_name)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-xs font-body font-medium text-foreground">{project.client.full_name || "Unnamed"}</p>
+                <p className="text-[10px] text-muted-foreground font-body">{project.client.email}</p>
               </div>
-            </>
-          )}
-
-          {project.deadline && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground font-body">
-              <Calendar className="h-3 w-3" /> Deadline: {project.deadline}
-            </div>
-          )}
-          {project.start_date && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground font-body">
-              <Calendar className="h-3 w-3" /> Start: {project.start_date}
             </div>
           )}
 
-          <div className="space-y-2">
+          {/* Dates */}
+          <div className="flex flex-wrap gap-3">
+            {project.start_date && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-body">
+                <Calendar className="h-3 w-3" /> Start: {project.start_date}
+              </div>
+            )}
+            {project.deadline && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-body">
+                <Calendar className="h-3 w-3" /> Deadline: {project.deadline}
+              </div>
+            )}
+          </div>
+
+          {/* Progress */}
+          <div className="min-w-[140px] space-y-1">
             <div className="flex justify-between text-xs font-body">
               <span className="text-muted-foreground">Progress</span>
               <span className="text-foreground font-medium">{progress}%</span>
@@ -140,41 +142,39 @@ export default function ProjectDetail() {
             <Progress value={progress} className="h-2" />
           </div>
 
-          {/* Internal Notes */}
+          {/* Notes */}
           {project.notes && (
-            <div>
-              <h3 className="font-heading font-semibold text-foreground text-sm flex items-center gap-1.5">
-                <FileText className="h-3.5 w-3.5" /> Notes
+            <div className="min-w-[160px] max-w-xs">
+              <h3 className="font-heading font-semibold text-foreground text-xs flex items-center gap-1">
+                <FileText className="h-3 w-3" /> Notes
               </h3>
-              <p className="text-xs text-muted-foreground font-body mt-1 whitespace-pre-wrap">{project.notes}</p>
+              <p className="text-[11px] text-muted-foreground font-body mt-0.5 whitespace-pre-wrap line-clamp-2">{project.notes}</p>
             </div>
           )}
 
-          <h3 className="font-heading font-semibold text-foreground text-sm pt-2">Team</h3>
-          <div className="space-y-2">
-            {project.members.filter((m) => m.role === "team").map((m) => (
-              <div key={m.id} className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50">
-                <Avatar className="h-7 w-7">
-                  <AvatarFallback className="bg-primary/20 text-primary text-[10px] font-body">
-                    {getInitials(m.profile?.full_name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-xs font-body font-medium text-foreground">{m.profile?.full_name || "Unnamed"}</p>
-                  <p className="text-[10px] text-muted-foreground font-body">{m.profile?.email}</p>
-                </div>
+          {/* Team */}
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-heading font-semibold text-foreground mr-1">Team:</span>
+            {project.members.filter((m) => m.role === "team").length > 0 ? (
+              <div className="flex -space-x-1.5">
+                {project.members.filter((m) => m.role === "team").map((m) => (
+                  <Avatar key={m.id} className="h-6 w-6 border-2 border-card">
+                    <AvatarFallback className="bg-primary/20 text-primary text-[9px] font-body">
+                      {getInitials(m.profile?.full_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
               </div>
-            ))}
-            {project.members.filter((m) => m.role === "team").length === 0 && (
-              <p className="text-xs text-muted-foreground font-body">No team members assigned</p>
+            ) : (
+              <span className="text-[11px] text-muted-foreground font-body">No members</span>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Kanban Board */}
-        <div className="lg:col-span-4 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-          <KanbanBoard tasks={tasks || []} onTaskClick={handleTaskClick} onNewTask={handleNewTask} />
-        </div>
+      {/* Kanban Board - Full Width */}
+      <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+        <KanbanBoard tasks={tasks || []} onTaskClick={handleTaskClick} onNewTask={handleNewTask} />
       </div>
 
       <TaskModal
