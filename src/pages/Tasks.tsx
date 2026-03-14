@@ -169,8 +169,17 @@ export default function Tasks() {
           onOpenChange={setModalOpen}
           task={selectedTask}
           projectId={selectedTask.project_id}
+          teamMembers={teamMembers?.map(m => ({ id: m.id, full_name: m.full_name, email: m.email }))}
         />
       )}
+
+      <TaskModal
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        projectId=""
+        projects={projects?.map(p => ({ id: p.id, name: p.name }))}
+        teamMembers={teamMembers?.map(m => ({ id: m.id, full_name: m.full_name, email: m.email }))}
+      />
     </div>
   );
 }

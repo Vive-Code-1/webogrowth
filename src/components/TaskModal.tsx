@@ -130,6 +130,20 @@ export function TaskModal({ open, onOpenChange, task, projectId, teamMembers, pr
           <SheetTitle className="font-heading">{isEditing ? "Edit Task" : "New Task"}</SheetTitle>
         </SheetHeader>
         <div className="space-y-4 mt-4">
+          {/* Project selector - only when creating from Tasks page */}
+          {!isEditing && projects && projects.length > 0 && (
+            <div>
+              <Label>Project *</Label>
+              <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                <SelectTrigger><SelectValue placeholder="Select project" /></SelectTrigger>
+                <SelectContent>
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div>
             <Label>Title *</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Task title" />

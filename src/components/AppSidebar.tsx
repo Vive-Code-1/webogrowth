@@ -46,9 +46,9 @@ export function AppSidebar() {
       <SidebarContent className="flex flex-col h-full">
         <div className={`p-4 flex justify-center ${collapsed ? "px-2" : ""}`}>
           {logoUrl ? (
-            <img src={logoUrl} alt="Logo" className={`${collapsed ? "h-8 w-8" : "h-10 w-10"} rounded-lg object-contain shrink-0`} />
+            <img src={logoUrl} alt="Logo" className={`${collapsed ? "h-8 w-8" : "h-14 w-auto max-w-[160px]"} rounded-lg object-contain shrink-0`} />
           ) : (
-            <div className={`${collapsed ? "h-8 w-8 text-sm" : "h-10 w-10 text-base"} rounded-lg bg-primary flex items-center justify-center font-heading font-bold text-primary-foreground shrink-0`}>
+            <div className={`${collapsed ? "h-8 w-8 text-sm" : "h-14 w-14 text-lg"} rounded-lg bg-primary flex items-center justify-center font-heading font-bold text-primary-foreground shrink-0`}>
               W
             </div>
           )}
