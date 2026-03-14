@@ -67,6 +67,7 @@ export function TaskModal({ open, onOpenChange, task, projectId, teamMembers, pr
       setAssigneeId("");
       setDueDate("");
       setVisibleToClient(false);
+      setSelectedProjectId(projectId || "");
     }
     onOpenChange(open);
   };
