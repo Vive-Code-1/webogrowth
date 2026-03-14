@@ -19,10 +19,13 @@ const priorities: TaskPriority[] = ["low", "medium", "high"];
 
 export default function Tasks() {
   const { data: tasks, isLoading } = useAllTasks();
+  const { data: projects } = useProjects();
+  const { data: teamMembers } = useTeamMembers();
   const [filterStage, setFilterStage] = useState<string>("all");
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [selectedTask, setSelectedTask] = useState<TaskWithAssignee | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "?";
