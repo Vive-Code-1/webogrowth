@@ -93,7 +93,7 @@ export function TaskModal({ open, onOpenChange, task, projectId, teamMembers, pr
         await createTask.mutateAsync({
           title,
           description: description || null,
-          project_id: projectId,
+          project_id: resolvedProjectId,
           stage,
           priority,
           assignee_id: assigneeId || null,
