@@ -28,9 +28,10 @@ interface TaskModalProps {
   task?: TaskWithAssignee | null;
   projectId: string;
   teamMembers?: { id: string; full_name: string | null; email: string | null }[];
+  projects?: { id: string; name: string }[];
 }
 
-export function TaskModal({ open, onOpenChange, task, projectId, teamMembers }: TaskModalProps) {
+export function TaskModal({ open, onOpenChange, task, projectId, teamMembers, projects }: TaskModalProps) {
   const isEditing = !!task;
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || "");
@@ -39,6 +40,7 @@ export function TaskModal({ open, onOpenChange, task, projectId, teamMembers }: 
   const [assigneeId, setAssigneeId] = useState(task?.assignee_id || "");
   const [dueDate, setDueDate] = useState(task?.due_date || "");
   const [visibleToClient, setVisibleToClient] = useState(task?.visible_to_client || false);
+  const [selectedProjectId, setSelectedProjectId] = useState(projectId || "");
   const [commentText, setCommentText] = useState("");
 
   const createTask = useCreateTask();
@@ -65,12 +67,15 @@ export function TaskModal({ open, onOpenChange, task, projectId, teamMembers }: 
       setAssigneeId("");
       setDueDate("");
       setVisibleToClient(false);
+      setSelectedProjectId(projectId || "");
     }
     onOpenChange(open);
   };
 
   const handleSave = async () => {
     if (!title.trim()) return;
+    const resolvedProjectId = projectId || selectedProjectId;
+    if (!resolvedProjectId) return;
     try {
       if (isEditing) {
         await updateTask.mutateAsync({
@@ -88,7 +93,7 @@ export function TaskModal({ open, onOpenChange, task, projectId, teamMembers }: 
         await createTask.mutateAsync({
           title,
           description: description || null,
-          project_id: projectId,
+          project_id: resolvedProjectId,
           stage,
           priority,
           assignee_id: assigneeId || null,
@@ -125,6 +130,20 @@ export function TaskModal({ open, onOpenChange, task, projectId, teamMembers }: 
           <SheetTitle className="font-heading">{isEditing ? "Edit Task" : "New Task"}</SheetTitle>
         </SheetHeader>
         <div className="space-y-4 mt-4">
+          {/* Project selector - only when creating from Tasks page */}
+          {!isEditing && projects && projects.length > 0 && (
+            <div>
+              <Label>Project *</Label>
+              <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                <SelectTrigger><SelectValue placeholder="Select project" /></SelectTrigger>
+                <SelectContent>
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div>
             <Label>Title *</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Task title" />

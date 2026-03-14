@@ -4,8 +4,11 @@ import { TaskStageBadge, PriorityBadge } from "@/components/TaskStatusBadge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { TaskModal } from "@/components/TaskModal";
-import { Eye } from "lucide-react";
+import { Eye, Plus } from "lucide-react";
+import { useProjects } from "@/hooks/useProjects";
+import { useTeamMembers } from "@/hooks/useTeamMembers";
 import type { Database } from "@/integrations/supabase/types";
 
 type TaskStage = Database["public"]["Enums"]["task_stage"];
@@ -16,10 +19,13 @@ const priorities: TaskPriority[] = ["low", "medium", "high"];
 
 export default function Tasks() {
   const { data: tasks, isLoading } = useAllTasks();
+  const { data: projects } = useProjects();
+  const { data: teamMembers } = useTeamMembers();
   const [filterStage, setFilterStage] = useState<string>("all");
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [selectedTask, setSelectedTask] = useState<TaskWithAssignee | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "?";
@@ -38,9 +44,14 @@ export default function Tasks() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl font-bold text-foreground">Tasks</h1>
-        <p className="text-sm text-muted-foreground font-body mt-1">{filtered.length} tasks</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-heading text-2xl font-bold text-foreground">Tasks</h1>
+          <p className="text-sm text-muted-foreground font-body mt-1">{filtered.length} tasks</p>
+        </div>
+        <Button onClick={() => setCreateModalOpen(true)} size="sm">
+          <Plus className="h-4 w-4 mr-1" /> Add Task
+        </Button>
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
@@ -158,8 +169,17 @@ export default function Tasks() {
           onOpenChange={setModalOpen}
           task={selectedTask}
           projectId={selectedTask.project_id}
+          teamMembers={teamMembers?.map(m => ({ id: m.id, full_name: m.full_name, email: m.email }))}
         />
       )}
+
+      <TaskModal
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        projectId=""
+        projects={projects?.map(p => ({ id: p.id, name: p.name }))}
+        teamMembers={teamMembers?.map(m => ({ id: m.id, full_name: m.full_name, email: m.email }))}
+      />
     </div>
   );
 }
