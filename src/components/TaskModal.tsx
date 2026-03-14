@@ -74,6 +74,8 @@ export function TaskModal({ open, onOpenChange, task, projectId, teamMembers, pr
 
   const handleSave = async () => {
     if (!title.trim()) return;
+    const resolvedProjectId = projectId || selectedProjectId;
+    if (!resolvedProjectId) return;
     try {
       if (isEditing) {
         await updateTask.mutateAsync({
