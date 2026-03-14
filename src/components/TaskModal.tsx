@@ -28,6 +28,7 @@ interface TaskModalProps {
   task?: TaskWithAssignee | null;
   projectId: string;
   teamMembers?: { id: string; full_name: string | null; email: string | null }[];
+  projects?: { id: string; name: string }[];
 }
 
 export function TaskModal({ open, onOpenChange, task, projectId, teamMembers }: TaskModalProps) {
