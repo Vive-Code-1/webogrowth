@@ -4,8 +4,11 @@ import { TaskStageBadge, PriorityBadge } from "@/components/TaskStatusBadge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { TaskModal } from "@/components/TaskModal";
-import { Eye } from "lucide-react";
+import { Eye, Plus } from "lucide-react";
+import { useProjects } from "@/hooks/useProjects";
+import { useTeamMembers } from "@/hooks/useTeamMembers";
 import type { Database } from "@/integrations/supabase/types";
 
 type TaskStage = Database["public"]["Enums"]["task_stage"];
