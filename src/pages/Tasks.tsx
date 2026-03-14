@@ -44,9 +44,14 @@ export default function Tasks() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl font-bold text-foreground">Tasks</h1>
-        <p className="text-sm text-muted-foreground font-body mt-1">{filtered.length} tasks</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-heading text-2xl font-bold text-foreground">Tasks</h1>
+          <p className="text-sm text-muted-foreground font-body mt-1">{filtered.length} tasks</p>
+        </div>
+        <Button onClick={() => setCreateModalOpen(true)} size="sm">
+          <Plus className="h-4 w-4 mr-1" /> Add Task
+        </Button>
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
