@@ -71,6 +71,11 @@
   }
 }
 
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(89%) sepia(44%) saturate(497%) hue-rotate(22deg) brightness(101%) contrast(94%);
+  cursor: pointer;
+}
+
 @layer utilities {
   .glow-primary {
     box-shadow: 0 0 20px hsl(78 85% 68% / 0.15);
