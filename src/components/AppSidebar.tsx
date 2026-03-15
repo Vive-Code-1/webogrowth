@@ -44,7 +44,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarContent className="flex flex-col h-full">
-        <div className={`p-4 flex justify-center ${collapsed ? "px-2" : ""}`}>
+        <div className={`p-4 flex ${collapsed ? "justify-center px-2" : "justify-start"}`}>
           {logoUrl ? (
             <img src={logoUrl} alt="Logo" className={`${collapsed ? "h-8 w-8" : "h-14 w-auto max-w-[160px]"} rounded-lg object-contain shrink-0`} />
           ) : (
