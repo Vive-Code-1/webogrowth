@@ -1,126 +1,100 @@
+# Invite, Pending Users, Security, and Login Redesign Plan
 
+## What I found
 
-# Full-Stack Agency PM System with RBAC
+- The Team/Client invite UI is calling the `invite-user` Edge Function, but the function currently returns non-2xx errors without enough useful feedback in the UI.
+- The invite dialog reads the session token but does not explicitly pass it to the Edge Function call, so I will make the auth handoff explicit and reliable.
+- Self-signups depend on the `on_auth_user_created` trigger creating a `profiles` row with no role. Pending Users then displays profiles that do not have a row in `user_roles`. The trigger exists, but I will harden it and add backfill/repair logic for any auth users that may be missing profiles.
+- The security scan still reports several database RLS issues in CRM-related tables (`activity_feed`, `leads`, `email_logs`, `interactions`, `templates`, `deals`, `lead_notes`, `lead_tags`) plus overly broad team profile access.
+- The login page currently uses a fallback `W` mark instead of the uploaded company logo and is very plain.
 
-This is a large undertaking that transforms the current mock-data frontend into a full-stack application with authentication, role-based access, and distinct portals. I recommend breaking this into phases. Here is the complete plan for **Phase 1** (foundation) and an outline for subsequent phases.
+## Changes I will implement
 
----
+### 1. Fix Team/Client invitation flow
 
-## Phase 1: Backend Foundation & Authentication
+Files:
+- `supabase/functions/invite-user/index.ts`
+- `src/components/InviteUserDialog.tsx`
 
-### 1. Connect Lovable Cloud (Supabase)
-Set up the backend with the following database schema:
+Planned fixes:
+- Explicitly pass the logged-in admin access token when invoking `invite-user`.
+- Improve Edge Function auth validation and admin-role checking.
+- Validate request body fields: email, full name, and role.
+- Support inviting both `team` and `client` roles from the same dialog.
+- Use safer role insertion with conflict handling so duplicate role inserts do not crash the invite flow.
+- Return clear errors such as:
+  - not logged in
+  - only admins can invite users
+  - user already has this role
+  - Supabase email/rate-limit issue
+- Improve Bengali/English toast messages so the actual problem is visible instead of only “Edge Function returned a non-2xx status code”.
+- Invalidate/refetch Team, Clients, and Pending Users queries after a successful invite so the UI updates immediately.
 
-```text
-┌──────────────┐    ┌───────────────┐    ┌──────────────┐
-│  auth.users   │───▶│   profiles     │───▶│  user_roles   │
-│  (built-in)   │    │  name, avatar  │    │  user_id, role│
-└──────────────┘    └───────────────┘    │  (admin/team/ │
-                                          │   client)     │
-                                          └───────────────┘
+### 2. Fix Pending Users for new signups
 
-┌──────────────┐    ┌───────────────┐    ┌──────────────┐
-│   projects    │───▶│ project_members│◀──│   profiles    │
-│  name, desc,  │    │  project_id,   │    └──────────────┘
-│  deadline,    │    │  user_id, role │
-│  status,      │    └───────────────┘
-│  client_id    │
-└──────┬───────┘
-       │
-       ▼
-┌──────────────┐    ┌───────────────┐
-│    tasks      │───▶│  comments      │
-│  title, desc, │    │  task_id,      │
-│  status, pri, │    │  user_id,      │
-│  assignee_id, │    │  content,      │
-│  project_id,  │    │  created_at    │
-│  due_date,    │    └───────────────┘
-│  visible_to_  │
-│  client,      │
-│  stage        │
-└──────────────┘
-```
+Database migration:
+- Recreate/harden `public.handle_new_user()` so every new signup reliably creates a profile.
+- Keep invited users assigned to their selected role, while public self-signups remain role-less until admin approval.
+- Add a repair/backfill step for existing auth users that do not have a profile row yet, so they can appear in Pending Users.
+- Keep roles in the separate `user_roles` table, as required for security.
 
-**Task stages enum:** `backlog`, `todo`, `in_progress`, `internal_review`, `client_review`, `completed`
+Frontend:
+- Improve `usePendingUsers` error handling so admin sees a useful error if the query fails.
+- Refetch pending count in the sidebar after approval/rejection.
+- Make approve/reject toasts show the backend error message when something fails.
 
-**User roles enum:** `admin`, `team`, `client`
+### 3. Fix security scan issues without breaking the app
 
-### 2. Authentication Pages
-- **Login page** (`/login`) — email/password
-- **Signup page** (`/signup`) — with role selection (admin creates accounts, but initial setup needs a first admin)
-- Auto-create profile on signup via DB trigger
-- Role stored in `user_roles` table (security definer function for RLS checks)
+Database migration:
+- Restrict CRM/private tables to admin/team roles only, preventing client users from reading or modifying all CRM data:
+  - `leads`
+  - `deals`
+  - `email_logs`
+  - `interactions`
+  - `lead_notes`
+  - `lead_tags`
+  - `templates`
+  - `activity_feed`
+- Replace `USING (true)` / `WITH CHECK (true)` policies on sensitive tables with role-scoped policies.
+- Restrict team profile reads so team members only see themselves and users related through shared projects, instead of all client emails.
+- Add safer storage policies for `comment-attachments`, especially owner-scoped update/delete where possible.
+- Re-run the security scan after changes and mark fixed findings that are resolved.
 
-### 3. Role-Based Routing & Layout
-- **Auth guard** component wrapping protected routes
-- After login, redirect based on role:
-  - `admin` → `/` (Global Dashboard)
-  - `team` → `/my-tasks`
-  - `client` → `/portal`
-- Sidebar dynamically shows only role-appropriate nav items
+Note: “Leaked Password Protection Disabled” is a Supabase Auth setting that usually must be enabled in the Supabase dashboard, not code. I will leave a clear note if it remains.
 
-### 4. RLS Policies
-- **Projects:** Admins see all. Team members see only projects they're assigned to. Clients see only projects where they're the client.
-- **Tasks:** Same project-scoped access. Clients only see tasks where `visible_to_client = true`.
-- **Comments:** Scoped to task access.
+### 4. Redesign login page with your logo
 
----
+Files:
+- `src/pages/Login.tsx`
+- likely reuse `src/hooks/useAppSettings.ts`
 
-## Phase 2: Admin Features
+Planned design:
+- Use the uploaded/company logo from `app_settings.logo_url` instead of the fallback `W`.
+- Create a more polished dark branded layout:
+  - responsive two-column desktop layout
+  - centered clean card on mobile
+  - subtle green glow using `#C9F368`
+  - improved form spacing, labels, and button states
+  - branded heading/subtitle
+- Keep signup and forgot-password links working.
+- Make the design responsive for mobile and desktop.
 
-### A. Global Dashboard (existing, connect to real data)
-- Stats from DB queries (active projects, tasks due, team workload)
-- Quick action buttons: "New Project", "Invite Client", "Add Team Member"
+### 5. Validation after implementation
 
-### B. Project Management
-- **Create Project form** (dialog): name, description, start date, deadline
-- **Client assignment** dropdown (from users with `client` role)
-- **Team assignment** multi-select (from users with `team` role)
+After the plan is approved and I implement:
+- Check Edge Function logs for invite errors.
+- Test the invite function directly with the current logged-in admin session where possible.
+- Check database policies and trigger definitions.
+- Run the security scan again.
+- Inspect the login page and invite dialogs in desktop and mobile responsive views.
+- Check for browser console/network errors.
 
-### C. Team & Client Management
-- Invite users by email (Supabase auth invite)
-- Assign roles on invite
+## Files expected to change
 
----
-
-## Phase 3: Task Engine
-
-### A. Enhanced Kanban Board
-- 6 columns: Backlog → To Do → In Progress → Internal Review → Client Review → Completed
-- Drag & drop between columns
-- Task cards show assignee, priority, due date, client visibility icon
-
-### B. Task Modal/Sheet
-- Full task details: title, description, assignee, due date, priority
-- **Visibility toggle**: "Visible to Client" switch
-- **Comments section**: threaded chat-like UI
-- Subtask support
-
-### C. List View
-- Table with sorting/filtering by status, assignee, priority, project
-
----
-
-## Phase 4: Client Portal
-
-### A. Client Dashboard (`/portal`)
-- Welcome message, list of their active projects
-- Simplified progress view (timeline/progress bar)
-
-### B. Client Project View
-- Only sees tasks marked `visible_to_client`
-- Can leave comments on tasks in `client_review` stage
-- Approve/request revision buttons
-
----
-
-## Implementation Approach
-
-Given the scope, I recommend implementing in order:
-1. **Phase 1** first — sets the foundation everything else depends on
-2. **Phase 2** next — admin can manage data
-3. **Phase 3** — task engine with real CRUD
-4. **Phase 4** — client portal
-
-Each phase is a separate conversation/set of prompts. Shall I begin with Phase 1 (Lovable Cloud setup, auth, RBAC, and role-based routing)?
-
+- `supabase/functions/invite-user/index.ts`
+- new Supabase migration under `supabase/migrations/`
+- `src/components/InviteUserDialog.tsx`
+- `src/hooks/usePendingUsers.ts`
+- `src/pages/PendingUsers.tsx` if needed for better error display
+- `src/pages/Login.tsx`
+- possibly `src/hooks/useAppSettings.ts` only if login needs public logo loading improvements
