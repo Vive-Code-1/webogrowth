@@ -303,6 +303,24 @@ export type Database = {
           },
         ]
       }
+      keep_alive: {
+        Row: {
+          created_at: string
+          id: string
+          note: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string
+        }
+        Relationships: []
+      }
       lead_notes: {
         Row: {
           content: string
@@ -778,6 +796,7 @@ export type Database = {
         Args: { _project_id: string; _user_id: string }
         Returns: boolean
       }
+      run_keep_alive: { Args: never; Returns: undefined }
       users_share_project: {
         Args: { _a: string; _b: string }
         Returns: boolean
